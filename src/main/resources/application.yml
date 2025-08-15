@@ -1,0 +1,42 @@
+spring:
+  datasource:
+    username: root
+    password: 19859351310
+    url: jdbc:mysql://localhost:3306/ticket?useSSL=false&charsetEncoding=utf8
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  data:
+    redis:
+      host: 192.168.1.9
+      port: 6379
+      database: 2
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: Asia/Shanghai
+mybatis-plus:
+  global-config:
+    db-config:
+      logic-delete-field: isDeleted # ?????????
+      logic-delete-value: 1 # ?????????????? 1
+      logic-not-delete-value: 0 # ?????????????? 0
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    default-executor-type: batch
+langchain4j:
+  community:
+    dashscope:
+      chat-model:
+        model-name: qwen-max
+        api-key: sk-4d9a8f600ad24543bb3630543f98f64e
+
+
+      embedding-model:
+        model-name: text-embedding-v4
+        api-key: sk-4d9a8f600ad24543bb3630543f98f64e
+logging:
+  level:
+    root: INFO
+minio:
+  endpoint: http://192.168.55.58:9000
+  access-key: admin
+  secret-key: 12345678
+  bucket-name: bucket-name

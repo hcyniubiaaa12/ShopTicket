@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.shop.mapper.VenuesMapper">
+
+    <resultMap id="BaseResultMap" type="com.shop.entity.Venues">
+            <id property="id" column="id" />
+            <result property="name" column="name" />
+            <result property="cityId" column="city_id" />
+            <result property="address" column="address" />
+            <result property="capacity" column="capacity" />
+            <result property="isDeleted" column="is_deleted" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,name,city_id,address,capacity,is_deleted
+    </sql>
+</mapper>
