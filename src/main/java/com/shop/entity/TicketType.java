@@ -4,16 +4,15 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.shop.enums.PerformanceStatus;
 import lombok.Data;
 
 /**
  * 
- * @TableName events
+ * @TableName ticket_type
  */
-@TableName(value ="events")
+@TableName(value ="ticket_type")
 @Data
-public class Events {
+public class TicketType {
     /**
      * 
      */
@@ -21,24 +20,19 @@ public class Events {
     private Integer id;
 
     /**
-     * 标题
+     * 
      */
-    private String title;
-
-    /**
-     * 歌手
-     */
-    private String artist;
-
-    /**
-     * 演出类型 话剧 演唱会
-     */
-    private Integer typeId;
+    private String name;
 
     /**
      * 
      */
-    private PerformanceStatus  status;
+    private Integer eventId;
+
+    /**
+     * 
+     */
+    private Integer priceId;
 
     /**
      * 

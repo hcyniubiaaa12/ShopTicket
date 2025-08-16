@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.shop.mapper.TicketTypeMapper">
+
+    <resultMap id="BaseResultMap" type="com.shop.entity.TicketType">
+            <id property="id" column="id" />
+            <result property="name" column="name" />
+            <result property="eventId" column="event_id" />
+            <result property="priceId" column="price_id" />
+            <result property="isDeleted" column="is_deleted" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,name,event_id,price_id,is_deleted
+    </sql>
+</mapper>

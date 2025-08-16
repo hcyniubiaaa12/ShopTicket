@@ -4,20 +4,144 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.shop.mapper.PerformancesMapper">
 
-    <resultMap id="BaseResultMap" type="com.shop.entity.Performances">
-            <id property="id" column="id" />
-            <result property="eventId" column="event_id" />
-            <result property="venueId" column="venue_id" />
-            <result property="startTime" column="start_time" />
-            <result property="duration" column="duration" />
-            <result property="status" column="status" />
-            <result property="availableSeats" column="available_seats" />
-            <result property="description" column="description" />
-            <result property="isDeleted" column="is_deleted" />
-    </resultMap>
 
-    <sql id="Base_Column_List">
-        id,event_id,venue_id,start_time,duration,status,
-        available_seats,description,is_deleted
-    </sql>
+    <select id="getAllPerformance" resultType="com.shop.vo.PerformanceVo">
+        SELECT
+               min_pr.min_price       as min_price,
+               e.id                   AS event_id,
+               e.title,
+               v.name                 AS venue_name,
+               c.name                 AS city_name,
+               i.url,                                    -- 注意：如果每场图不同，这里会出问题（后面说）
+               MIN(p.start_time)      AS first_show,
+               MAX(p.start_time)      AS last_show,
+               COUNT(p.id)            AS total_performances,
+               MIN(p.available_seats) AS available_seats -- 可选
+
+
+        FROM performances p
+                 JOIN EVENTS e ON e.id = p.event_id
+                 JOIN (SELECT MIN(price) min_price, event_id
+                       FROM price
+                       WHERE price.`is_deleted` = 0
+                       GROUP BY event_id) min_pr
+                      ON min_pr.event_id = e.id
+                 JOIN venues v ON p.venue_id = v.id
+                 JOIN city c ON v.city_id = c.id
+                 JOIN images i ON e.id = i.event_id AND i.is_deleted = 0 -- 改为关联 event 的图，不是 performance
+
+        WHERE p.is_deleted = 0
+          AND p.status = 0
+          AND e.is_deleted = 0
+          AND e.status = 0
+          AND v.is_deleted = 0
+          AND c.is_deleted = 0
+          AND i.is_deleted = 0
+
+        GROUP BY e.id,
+                 e.title,
+                 v.name,
+                 v.address,
+                 c.name,
+                 i.url
+
+
+        ORDER BY min_price
+    </select>
+    <select id="getPerformanceById" resultType="com.shop.vo.PerformanceVo">
+        SELECT
+               min_pr.min_price       as min_price,
+               e.id                   AS event_id,
+               e.title,
+               t.name                 AS type_name,
+               v.name                 AS venue_name,
+               c.name                 AS city_name,
+               i.url,                                    -- 注意：如果每场图不同，这里会出问题（后面说）
+               MIN(p.start_time)      AS first_show,
+               MAX(p.start_time)      AS last_show,
+               COUNT(p.id)            AS total_performances,
+               MIN(p.available_seats) AS available_seats -- 可选
+
+
+        FROM performances p
+                 JOIN EVENTS e ON e.id = p.event_id
+                 JOIN (SELECT MIN(price) min_price, event_id
+                       FROM price
+                       WHERE price.`is_deleted` = 0
+                       GROUP BY event_id) min_pr
+                      ON min_pr.event_id = e.id
+                 JOIN event_type t ON t.id = e.type_id
+                 JOIN venues v ON p.venue_id = v.id
+                 JOIN city c ON v.city_id = c.id
+                 JOIN images i ON e.id = i.event_id AND i.is_deleted = 0 -- 改为关联 event 的图，不是 performance
+
+        WHERE p.is_deleted = 0
+          AND p.status = 0
+          AND e.is_deleted = 0
+          AND e.status = 0
+          AND t.is_deleted = 0
+          AND v.is_deleted = 0
+          AND c.is_deleted = 0
+          AND i.is_deleted = 0
+          AND t.id = #{id}
+
+        GROUP BY e.id,
+                 e.title,
+                 t.name,
+                 v.name,
+                 v.address,
+                 c.name,
+                 i.url
+
+        ORDER BY min_price
+    </select>
+    <select id="getPerformanceByEventId" resultType="com.shop.vo.PerformanceVo">
+
+        SELECT e.id              as event_id,
+               e.title,
+               min_pr.min_price  as min_price,
+               v.name            AS venue_name,
+               c.name            AS city_name,
+               i.url,
+               p.description,
+               p.available_seats,
+               p.duration,
+               MIN(p.start_time) AS first_show,
+               MAX(p.start_time) AS last_show,
+               COUNT(p.id)       AS total_performances
+        FROM performances p
+                 JOIN EVENTS e ON p.event_id = e.id
+                 JOIN (SELECT MIN(price) min_price, event_id
+                       FROM price
+                       WHERE price.`is_deleted` = 0
+                       GROUP BY event_id) min_pr
+                      ON min_pr.event_id = e.id
+                 JOIN venues v ON p.venue_id = v.id
+                 JOIN city c ON v.city_id = c.id
+                 JOIN images i ON e.id = i.event_id
+        WHERE p.is_deleted = 0
+          AND v.is_deleted = 0
+          AND c.is_deleted = 0
+          AND i.is_deleted = 0
+          AND e.id = #{id}
+        GROUP BY e.id,
+                 e.title,
+                 v.name,
+                 c.name,
+                 p.available_seats,
+                 p.duration,
+                 p.description,
+                 i.url
+        ORDER BY min_price
+
+    </select>
+
+    <select id="getTimeByEventId" resultType="com.shop.vo.TimeVo">
+        SELECT p.id ,start_time AS time
+        FROM performances p
+                 JOIN EVENTS e ON p.`event_id` = e.`id`
+        WHERE e.`id` = #{id}
+        AND p.`is_deleted` = 0
+        AND e.`is_deleted` = 0
+    </select>
 </mapper>

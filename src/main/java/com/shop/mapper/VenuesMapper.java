@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 /**
 * @author 陈增
 * @description 针对表【venues】的数据库操作Mapper
-* @createDate 2025-08-15 18:05:37
+* @createDate 2025-08-18 17:33:31
 * @Entity com.shop.entity.Venues
 */
 public interface VenuesMapper extends BaseMapper<Venues> {

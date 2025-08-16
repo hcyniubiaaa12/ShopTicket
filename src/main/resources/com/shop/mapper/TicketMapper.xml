@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.shop.mapper.TicketMapper">
+
+    <resultMap id="BaseResultMap" type="com.shop.entity.Ticket">
+            <id property="id" column="id" />
+            <result property="performanceId" column="performance_id" />
+            <result property="ticketTypeId" column="ticket_type_id" />
+            <result property="stock" column="stock" />
+            <result property="status" column="status" />
+            <result property="isDeleted" column="is_deleted" />
+    </resultMap>
+
+
+    <select id="getAllTicketById" resultType="com.shop.vo.TicketVo">
+        select t.`id`,
+               t.`stock`,
+               tt.`name`,
+               p.`price`
+        from ticket_type tt
+                 join ticket t
+                      on tt.`id` = t.`ticket_type_id`
+                 join price p
+                      on p.`id` = tt.`price_id`
+        where p.is_deleted = 0
+          and tt.is_deleted = 0
+          and t.is_deleted = 0
+          and t.`performance_id` = #{id}
+    </select>
+</mapper>

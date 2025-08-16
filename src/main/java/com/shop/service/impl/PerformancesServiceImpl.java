@@ -4,17 +4,43 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.shop.entity.Performances;
 import com.shop.service.PerformancesService;
 import com.shop.mapper.PerformancesMapper;
+import com.shop.vo.PerformanceVo;
+import com.shop.vo.TimeVo;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 /**
-* @author 陈增
+* @author
 * @description 针对表【performances】的数据库操作Service实现
 * @createDate 2025-08-15 18:05:34
 */
 @Service
 public class PerformancesServiceImpl extends ServiceImpl<PerformancesMapper, Performances>
     implements PerformancesService{
+    @Autowired
+    private PerformancesMapper performancesMapper;
 
+    @Override
+    public List<PerformanceVo> getPerformanceById(Integer id) {
+        return performancesMapper.getPerformanceById(id);
+    }
+
+    @Override
+    public List<PerformanceVo> getAllPerformance() {
+        return performancesMapper.getAllPerformance();
+    }
+
+    @Override
+    public List<PerformanceVo> getPerformanceByEventId(Integer id) {
+        return  performancesMapper.getPerformanceByEventId(id);
+    }
+
+    @Override
+    public List<TimeVo> getTimeByEventId(Integer id) {
+        return performancesMapper.getTimeByEventId(id);
+    }
 }
 
 

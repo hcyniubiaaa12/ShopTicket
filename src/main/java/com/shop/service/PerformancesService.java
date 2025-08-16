@@ -2,6 +2,10 @@ package com.shop.service;
 
 import com.shop.entity.Performances;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.shop.vo.PerformanceVo;
+import com.shop.vo.TimeVo;
+
+import java.util.List;
 
 /**
 * @author 陈增
@@ -10,4 +14,11 @@ import com.baomidou.mybatisplus.extension.service.IService;
 */
 public interface PerformancesService extends IService<Performances> {
 
+   List<PerformanceVo> getPerformanceById(Integer id);
+
+   List<PerformanceVo> getAllPerformance();
+
+    List<PerformanceVo> getPerformanceByEventId(Integer id);
+
+    List<TimeVo> getTimeByEventId(Integer id);
 }
