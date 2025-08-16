@@ -1,23 +1,30 @@
 package com.shop;
 
-import com.shop.entity.City;
-import com.shop.service.CityService;
-import lombok.extern.slf4j.Slf4j;
+import com.shop.controller.UploadController;
+import com.shop.service.PerformancesService;
+import com.shop.vo.PerformanceVo;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.io.ClassPathResource;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.List;
 
 @SpringBootTest
 class ShopApplicationTests {
     @Autowired
-    private CityService cityService;
+    private PerformancesService performancesService;
 
     @Test
-    void contextLoads() {
-        List<City> list = cityService.list();
-        System.out.println( list);
+    void contextLoads() throws IOException {
+
+
+
     }
+
 
 }
