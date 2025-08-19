@@ -17,11 +17,19 @@ public class  Result<T> {
         this.message = resultCodeEnum.getMessage();
         this.data = data;
     }
+    public Result(Integer code, String message){
+        this.code = code;
+        this.message = message;
+
+    }
     public static <T> Result<T> success(T data){
         return new Result<>(ResultCodeEnum.SUCCESS, data);
     }
     public static <T> Result<T> fail(T data){
         return new Result<>(ResultCodeEnum.FAIL, data);
+    }
+    public static <T> Result<T> fail(Integer code, String message){
+        return new Result<>(code, message);
     }
 
 }

@@ -4,7 +4,7 @@ public enum ResultCodeEnum {
     SUCCESS(200, "成功"),
 
     FAIL(500, "失败"),
-    DISABLE(403, "该账户已经被禁用"),
+    DISABLE(403, "手机号格式错误"),
     NOT_EXIT(404, "验证码不存在"),
     EXPIRED(405, "验证码已过期"),
     NOT_MATCH(406, "验证码错误"),

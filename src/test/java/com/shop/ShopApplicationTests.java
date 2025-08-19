@@ -1,6 +1,8 @@
 package com.shop;
 
+import com.shop.controller.CaptchaController;
 import com.shop.controller.UploadController;
+import com.shop.dto.CaptchaDto;
 import com.shop.result.Result;
 import com.shop.service.PerformancesService;
 import com.shop.vo.PerformanceVo;
@@ -25,6 +27,8 @@ class ShopApplicationTests {
     private PerformancesService performancesService;
     @Autowired
     private UploadController uploadController;
+    @Autowired
+    private CaptchaController captchaController;
 
     @Test
     void contextLoads() throws IOException {
@@ -50,6 +54,11 @@ class ShopApplicationTests {
         System.out.println(upload);
 
 
+    }
+    @Test
+    void test2(){
+        Result<CaptchaDto> captcha = captchaController.getCaptcha();
+        System.out.println(captcha);
     }
 
 
