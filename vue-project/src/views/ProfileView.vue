@@ -3,11 +3,14 @@
     <!-- 用户信息 -->
     <div class="user-header">
       <div class="user-avatar">
-        <van-icon name="user-o" size="40" />
+        <img :src=loginStore.avatar >
+      
+        
+      
       </div>
-      <div class="user-info">
-        <h3 class="user-name">用户名</h3>
-        <p class="user-id">ID: 123456789</p>
+      <div class="user-info" >
+        <h3 class="user-name">用户:{{ loginStore.username }}</h3>
+       
       </div>
       <div class="user-actions">
         <van-button size="small" @click="editProfile">编辑资料</van-button>
@@ -81,13 +84,8 @@
     <!-- 底部导航 -->
     <footer class="app-footer">
       <div class="footer-container">
-        <div 
-          class="footer-item" 
-          v-for="(item, index) in footerItems" 
-          :key="index"
-          :class="{ active: activeFooterItem === item.id }"
-          @click="setActiveFooterItem(item.id)"
-        >
+        <div class="footer-item" v-for="(item, index) in footerItems" :key="index"
+          :class="{ active: activeFooterItem === item.id }" @click="setActiveFooterItem(item.id)">
           <div class="icon">{{ item.icon }}</div>
           <span>{{ item.name }}</span>
         </div>
@@ -97,8 +95,11 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useLoginStore } from '@/stores/login'
+const loginStore = useLoginStore()
+
 
 const router = useRouter()
 const activeFooterItem = ref('profile')
@@ -119,10 +120,23 @@ const stats = ref([
   { value: 2, label: '优惠券' }
 ])
 
+// 检查登录状态
+onMounted(() => {
+  // 模拟检查登录状态的逻辑
+  // 实际项目中可以从store、localStorage或API获取用户登录状态
+  if (!loginStore.isLogin) {
+    // 如果未登录，跳转到登录页面
+    router.push('/login')
+  } else {
+    router.push('/profile')
+  }
+})
+
 // 编辑资料
 const editProfile = () => {
   console.log('编辑资料')
 }
+
 
 const setActiveFooterItem = (itemId) => {
   activeFooterItem.value = itemId
@@ -137,7 +151,13 @@ const setActiveFooterItem = (itemId) => {
       router.push('/order')
       break
     case 'profile':
-      router.push('/profile')
+      if (!loginStore.isLogin) {
+        // 如果未登录，跳转到登录页面
+        router.push('/login')
+      } else {
+        router.push('/profile')
+      }
+
       break
   }
 }

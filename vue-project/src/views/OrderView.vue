@@ -90,9 +90,10 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed,onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-
+import {useLoginStore} from '@/stores/login'
+const loginStore = useLoginStore()
 const router = useRouter()
 const activeTab = ref('all')
 const activeFooterItem = ref('order')
@@ -165,7 +166,13 @@ const orders = ref([
     eventImage: 'https://dummyimage.com/80x100/66ff99/ffffff&text=相声'
   }
 ])
-
+onMounted(() => {
+  
+  if (!loginStore.isLogin) {
+    // 如果未登录，跳转到登录页面
+    router.push('/login')
+  }
+})
 // 根据状态筛选订单
 const filteredOrders = computed(() => {
   if (activeTab.value === 'all') {

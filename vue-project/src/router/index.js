@@ -4,6 +4,7 @@ import TicketView from '../views/TicketView.vue'
 import OrderView from '../views/OrderView.vue'
 import ProfileView from '../views/ProfileView.vue'
 import EventDetailView from '../views/EventDetailView.vue'
+import LoginPage from '../views/LoginPage.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -33,6 +34,11 @@ const router = createRouter({
       name: 'eventDetail',
       component: EventDetailView,
       props: true
+    },
+    {
+      path: '/login',
+      name: 'login',
+      component: LoginPage
     },
     {
     path:'/more',

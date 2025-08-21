@@ -92,9 +92,8 @@
           <h3>场次时间</h3>
           <div class="date-selector">
             <div v-for="(date, index) in performanceDates" :key="index"
-              :class="['date-item', { active: selectedDate === date.date }]" @click="selectDate(date.date)">
-              {{ formatDate(date.date) }}<br>
-              <span class="day">{{ date.day }}</span>
+              :class="['date-item', { active: selectedDate === date.time }]" @click="selectDate(date)">
+              {{ formatDate(date.time) }}
             </div>
           </div>
         </div>
@@ -102,9 +101,29 @@
         <div class="ticket-section">
           <h3>票价</h3>
           <div class="price-selector">
-            <div v-for="(price, index) in ticketPrices" :key="index"
+            <div v-for="(price, index) in ticketList" :key="index"
               :class="['price-item', { active: selectedPrice === price }]" @click="selectPrice(price)">
-              ¥{{ price }}
+              <div class="price-info">
+                <div class="price-name">{{ price.name }}</div>
+                <div class="price-amount">¥{{ price.price }}</div>
+              </div>
+              <div class="price-stock" v-if="price.stock === 1">
+                剩余 {{ price.stock }} 张
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 修改票数选择区域为加减按钮形式 -->
+        <div class="ticket-section" v-if="visible">
+          <h3>票数</h3>
+          <div class="quantity-selector">
+            <span class="quantity-limit">每笔订单限购4张</span>
+            <div class="quantity-control">
+              <button class="quantity-btn" @click="decreaseQuantity" :disabled="selectedQuantity <= 1">-</button>
+              <span class="quantity-display">{{ selectedQuantity }}</span>
+              <button class="quantity-btn increase-btn" @click="increaseQuantity"
+                :disabled="selectedQuantity >= 4">+</button>
             </div>
           </div>
         </div>
@@ -125,6 +144,9 @@ import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { fetchDetail } from '../../public/util/performance/fetchDetail'
 import { fetchTimeById } from '../../public/util/performance/fetchTime'
+import { fetchhAllTicket } from '../../public/util/ticket/fetchAllTicket'
+import {useLoginStore} from '@/stores/login'
+const loginStore = useLoginStore()
 
 const route = useRoute()
 const router = useRouter()
@@ -136,40 +158,33 @@ const notice = "1. 请在演出前30分钟入场\n2. 请勿携带易燃易爆物
 const showTicketModal = ref(false)
 const selectedDate = ref('')
 const selectedPrice = ref(null)
+const selectedQuantity = ref(1) // 添加票数选择，默认为1
+const dateObject = ref([])
 const timeList = ref([])
+const ticketList = ref([])
+const visible = ref(false)
 
-// 演出数据 (实际项目中应该通过API获取)
+// 演出数据 
 const eventData = ref([])
 
 // 模拟演出场次数据
 const performanceDates = computed(() => {
   if (!eventData.value.firstShow) return []
-  if (eventData.value.totalPerformances > 1) {
-    return timeList.value.map(item => ({ date: item.time }))
-  }
-  return [
-    { date: eventData.value.firstShow }
-  ]
 
+  return timeList.value
 
 })
 
-// 模拟票价数据
-const ticketPrices = computed(() => {
-  if (!eventData.value.price) return []
-
-  // 从起价生成几个不同价位的票价
-  const basePrice = parseInt(eventData.value.price)
-  return [basePrice, basePrice + 200, basePrice + 400, basePrice + 600, basePrice + 1000]
-})
 
 onMounted(async () => {
   const { data } = await fetchDetail(route.params.id);
   if (data.code === 200) {
     eventData.value = data.data[0];
-    console.log(data.data[0])
+  
+    
 
   }
+
 })
 
 // 返回上一页
@@ -194,10 +209,17 @@ const shareEvent = () => {
 
 // 购票
 const buyTicket = async () => {
+    if (!loginStore.isLogin) {
+    // 如果未登录，跳转到登录页面
+    router.push('/login')
+  }
   showTicketModal.value = true
   let { data } = await fetchTimeById(eventData.value.eventId)
+
   if (data.code === 200) {
     timeList.value = data.data
+
+
 
   }
 }
@@ -208,13 +230,34 @@ const closeTicketModal = () => {
 }
 
 // 选择场次日期
-const selectDate = (date) => {
-  selectedDate.value = date
+const selectDate = async (date) => {
+  dateObject.value = date
+  selectedDate.value = date.time
+  const res = await fetchhAllTicket(date.id);
+  if (res.data.code === 200) {
+    ticketList.value = res.data.data
+
+  }
 }
 
 // 选择票价
 const selectPrice = (price) => {
+  visible.value = true
   selectedPrice.value = price
+}
+
+// 添加增加票数的方法
+const increaseQuantity = () => {
+  if (selectedQuantity.value < 4) {
+    selectedQuantity.value++
+  }
+}
+
+// 添加减少票数的方法
+const decreaseQuantity = () => {
+  if (selectedQuantity.value > 1) {
+    selectedQuantity.value--
+  }
 }
 
 // 格式化日期显示
@@ -227,15 +270,14 @@ const formatDate = (dateStr) => {
 const confirmPurchase = () => {
   if (selectedDate.value && selectedPrice.value) {
     console.log('确认购票:', {
+      id: dateObject.value.id,
       eventId: eventData.value.eventId,
-      date: selectedDate.value,
-      price: selectedPrice.value
+      date: dateObject.value.time,
+      price: selectedPrice.value.price,
+      ticketId: selectedPrice.value.id,
+      quantity: selectedQuantity.value // 添加票数信息
     })
-    alert(`已选择：
-演出：${eventData.value.title}
-场次：${formatDate(selectedDate.value)}
-票价：¥${selectedPrice.value}
-点击确定将跳转到支付页面`)
+
     closeTicketModal()
   }
 }
@@ -420,7 +462,9 @@ const confirmPurchase = () => {
   border-top-left-radius: 20px;
   border-top-right-radius: 20px;
   padding: 20px;
+  padding-top: 50px;
   overflow-y: auto;
+  position: relative;
 }
 
 .modal-header {
@@ -428,6 +472,14 @@ const confirmPurchase = () => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 10px;
+  background-color: #fff;
+  z-index: 10;
+  border-bottom: 1px solid #f0f0f0;
 }
 
 .modal-header h2 {
@@ -501,9 +553,9 @@ const confirmPurchase = () => {
 }
 
 .date-item.active {
-  border-color: #ff6a00;
-  color: #ff6a00;
-  background-color: #fff0e6;
+  border-color: #FF69B4;
+  color: #FF69B4;
+  background-color: #fff0f5;
 }
 
 .date-item .day {
@@ -518,17 +570,81 @@ const confirmPurchase = () => {
 }
 
 .price-item {
-  padding: 8px 15px;
+  padding: 12px 15px;
   border: 1px solid #ddd;
-  border-radius: 20px;
+  border-radius: 8px;
   cursor: pointer;
   font-size: 14px;
+  text-align: center;
+  min-width: 100px;
+  transition: all 0.3s ease;
 }
 
 .price-item.active {
-  border-color: #ff6a00;
-  color: #ff6a00;
-  background-color: #fff0e6;
+  border-color: #FF69B4;
+  background-color: #fff0f5;
+}
+
+.price-name {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 5px;
+}
+
+.price-amount {
+  font-size: 16px;
+  font-weight: bold;
+  color: #FF69B4;
+}
+
+.quantity-selector {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+}
+
+.quantity-limit {
+  font-size: 12px;
+  color: #999;
+}
+
+.quantity-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.quantity-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid #ddd;
+  background-color: #fff;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.quantity-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.increase-btn {
+  background-color: #FF69B4;
+  border-color: #FF69B4;
+  color: white;
+}
+
+.quantity-display {
+  min-width: 24px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: bold;
 }
 
 .modal-footer {
@@ -540,7 +656,7 @@ const confirmPurchase = () => {
 .buy-button {
   width: 100%;
   padding: 15px;
-  background-color: #ff6a00;
+  background-color: #FF69B4;
   color: white;
   border: none;
   border-radius: 25px;
