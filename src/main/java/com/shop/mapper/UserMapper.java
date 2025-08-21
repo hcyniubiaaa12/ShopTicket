@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 /**
 * @author 陈增
 * @description 针对表【user】的数据库操作Mapper
-* @createDate 2025-08-20 14:52:48
+* @createDate 2025-08-21 17:07:14
 * @Entity com.shop.entity.User
 */
 public interface UserMapper extends BaseMapper<User> {

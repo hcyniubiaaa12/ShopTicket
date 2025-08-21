@@ -18,7 +18,7 @@ public class LoginController {
 
     @PostMapping("/login")
     public Result login (@RequestBody CaptchaVo captchaVo){
-        System.out.println(captchaVo);
+
         return  userService.login(captchaVo);
     }
 }
