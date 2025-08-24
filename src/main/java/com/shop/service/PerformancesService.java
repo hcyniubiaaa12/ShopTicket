@@ -2,8 +2,8 @@ package com.shop.service;
 
 import com.shop.entity.Performances;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.shop.vo.PerformanceVo;
-import com.shop.vo.TimeVo;
+import com.shop.dto.PerformanceDto;
+import com.shop.dto.TimeDto;
 
 import java.util.List;
 
@@ -14,11 +14,11 @@ import java.util.List;
 */
 public interface PerformancesService extends IService<Performances> {
 
-   List<PerformanceVo> getPerformanceById(Integer id);
+   List<PerformanceDto> getPerformanceById(Integer id);
 
-   List<PerformanceVo> getAllPerformance();
+   List<PerformanceDto> getAllPerformance();
 
-    List<PerformanceVo> getPerformanceByEventId(Integer id);
+    List<PerformanceDto> getPerformanceByEventId(Integer id);
 
-    List<TimeVo> getTimeByEventId(Integer id);
+    List<TimeDto> getTimeByEventId(Integer id);
 }

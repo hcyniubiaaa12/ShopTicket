@@ -2,7 +2,7 @@ package com.shop.mapper;
 
 import com.shop.entity.Ticket;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.shop.vo.TicketVo;
+import com.shop.dto.TicketDto;
 
 import java.util.List;
 
@@ -14,7 +14,7 @@ import java.util.List;
 */
 public interface TicketMapper extends BaseMapper<Ticket> {
 
-    List<TicketVo> getAllTicketById(Integer id);
+    List<TicketDto> getAllTicketById(Integer id);
 }
 
 

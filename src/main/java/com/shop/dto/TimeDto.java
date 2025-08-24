@@ -1,11 +1,11 @@
-package com.shop.vo;
+package com.shop.dto;
 
 import lombok.Data;
 
 import java.util.Date;
-import java.util.List;
+
 @Data
-public class TimeVo {
+public class TimeDto {
     private Integer id;
     private Date time;
 }

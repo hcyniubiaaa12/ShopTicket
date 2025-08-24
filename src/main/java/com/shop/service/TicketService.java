@@ -2,7 +2,7 @@ package com.shop.service;
 
 import com.shop.entity.Ticket;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.shop.vo.TicketVo;
+import com.shop.dto.TicketDto;
 
 import java.util.List;
 
@@ -13,5 +13,5 @@ import java.util.List;
 */
 public interface TicketService extends IService<Ticket> {
 
-    List<TicketVo> getAllTicketById(Integer id);
+    List<TicketDto> getAllTicketById(Integer id);
 }

@@ -4,8 +4,8 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.shop.entity.Performances;
 import com.shop.service.PerformancesService;
 import com.shop.mapper.PerformancesMapper;
-import com.shop.vo.PerformanceVo;
-import com.shop.vo.TimeVo;
+import com.shop.dto.PerformanceDto;
+import com.shop.dto.TimeDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -23,22 +23,22 @@ public class PerformancesServiceImpl extends ServiceImpl<PerformancesMapper, Per
     private PerformancesMapper performancesMapper;
 
     @Override
-    public List<PerformanceVo> getPerformanceById(Integer id) {
+    public List<PerformanceDto> getPerformanceById(Integer id) {
         return performancesMapper.getPerformanceById(id);
     }
 
     @Override
-    public List<PerformanceVo> getAllPerformance() {
+    public List<PerformanceDto> getAllPerformance() {
         return performancesMapper.getAllPerformance();
     }
 
     @Override
-    public List<PerformanceVo> getPerformanceByEventId(Integer id) {
+    public List<PerformanceDto> getPerformanceByEventId(Integer id) {
         return  performancesMapper.getPerformanceByEventId(id);
     }
 
     @Override
-    public List<TimeVo> getTimeByEventId(Integer id) {
+    public List<TimeDto> getTimeByEventId(Integer id) {
         return performancesMapper.getTimeByEventId(id);
     }
 }

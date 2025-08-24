@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.shop.mapper.OrdersMapper">
+
+    <resultMap id="BaseResultMap" type="com.shop.entity.Orders">
+            <id property="id" column="id" />
+            <result property="num" column="num" />
+            <result property="price" column="price" />
+            <result property="userId" column="user_id" />
+            <result property="ticketId" column="ticket_id" />
+            <result property="createTime" column="create_time" />
+            <result property="isDeleted" column="is_deleted" />
+    </resultMap>
+
+
+    <select id="queryOrder" resultType="com.shop.dto.OrderDto">
+        SELECT o.`id`,
+               e.`title`,
+               c.`name` as city,
+               o.`num`,
+               o.`price`,
+               o.`status`,
+               o.`create_time`,
+               tt.`name` as ticketType,
+               v.`name` as venue,
+               i.`url`,
+               p.`duration`,
+               p.`start_time`
+
+        FROM orders o
+                 JOIN ticket t
+                      ON o.`ticket_id` = t.`id`
+                 JOIN ticket_type tt
+                      ON tt.`id` = t.`ticket_type_id`
+                 JOIN images i
+                      ON tt.`event_id` = i.`event_id`
+                 JOIN performances p
+                      ON p.`id` = o.`performance_id`
+                 JOIN EVENTS e
+                      ON e.`id` = p.`event_id`
+                 JOIN venues v
+                      ON v.`id` = p.`venue_id`
+                 JOIN city c
+                      ON c.`id` = v.`city_id`
+        WHERE o.`user_id` = #{userId}
+
+    </select>
+</mapper>

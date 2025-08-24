@@ -1,13 +1,12 @@
-package com.shop.vo;
+package com.shop.dto;
 
-import com.shop.entity.Performances;
 import lombok.Data;
 
 import java.util.Date;
 
 @Data
 
-public class PerformanceVo {
+public class PerformanceDto {
 
     private Integer minPrice;
     private String description;

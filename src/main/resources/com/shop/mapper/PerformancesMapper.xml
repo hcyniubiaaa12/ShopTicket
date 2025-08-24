@@ -5,7 +5,7 @@
 <mapper namespace="com.shop.mapper.PerformancesMapper">
 
 
-    <select id="getAllPerformance" resultType="com.shop.vo.PerformanceVo">
+    <select id="getAllPerformance" resultType="com.shop.dto.PerformanceDto">
         SELECT
                min_pr.min_price       as min_price,
                e.id                   AS event_id,
@@ -48,7 +48,7 @@
 
         ORDER BY min_price
     </select>
-    <select id="getPerformanceById" resultType="com.shop.vo.PerformanceVo">
+    <select id="getPerformanceById" resultType="com.shop.dto.PerformanceDto">
         SELECT
                min_pr.min_price       as min_price,
                e.id                   AS event_id,
@@ -95,7 +95,7 @@
 
         ORDER BY min_price
     </select>
-    <select id="getPerformanceByEventId" resultType="com.shop.vo.PerformanceVo">
+    <select id="getPerformanceByEventId" resultType="com.shop.dto.PerformanceDto">
 
         SELECT e.id              as event_id,
                e.title,
@@ -136,7 +136,7 @@
 
     </select>
 
-    <select id="getTimeByEventId" resultType="com.shop.vo.TimeVo">
+    <select id="getTimeByEventId" resultType="com.shop.dto.TimeDto">
         SELECT p.id ,start_time AS time
         FROM performances p
                  JOIN EVENTS e ON p.`event_id` = e.`id`

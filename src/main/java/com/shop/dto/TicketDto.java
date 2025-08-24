@@ -1,9 +1,9 @@
-package com.shop.vo;
+package com.shop.dto;
 
 import lombok.Data;
 
 @Data
-public class TicketVo {
+public class TicketDto {
     private Integer id;
     private String name;
     private Integer price;

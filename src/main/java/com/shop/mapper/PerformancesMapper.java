@@ -2,9 +2,8 @@ package com.shop.mapper;
 
 import com.shop.entity.Performances;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.shop.result.Result;
-import com.shop.vo.PerformanceVo;
-import com.shop.vo.TimeVo;
+import com.shop.dto.PerformanceDto;
+import com.shop.dto.TimeDto;
 
 import java.util.List;
 
@@ -16,13 +15,13 @@ import java.util.List;
 */
 public interface PerformancesMapper extends BaseMapper<Performances> {
 
-    List<PerformanceVo> getAllPerformance();
+    List<PerformanceDto> getAllPerformance();
 
-    List<PerformanceVo> getPerformanceById(Integer id);
+    List<PerformanceDto> getPerformanceById(Integer id);
 
-    List<PerformanceVo> getPerformanceByEventId(Integer id);
+    List<PerformanceDto> getPerformanceByEventId(Integer id);
 
-    List<TimeVo> getTimeByEventId(Integer id);
+    List<TimeDto> getTimeByEventId(Integer id);
 }
 
 

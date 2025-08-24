@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.shop.entity.Ticket;
 import com.shop.service.TicketService;
 import com.shop.mapper.TicketMapper;
-import com.shop.vo.TicketVo;
+import com.shop.dto.TicketDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -22,7 +22,7 @@ public class TicketServiceImpl extends ServiceImpl<TicketMapper, Ticket>
     private TicketMapper ticketMapper;
 
     @Override
-    public List<TicketVo> getAllTicketById(Integer id) {
+    public List<TicketDto> getAllTicketById(Integer id) {
         return ticketMapper.getAllTicketById( id);
     }
 }
