@@ -2,24 +2,18 @@ package com.shop;
 
 import com.shop.controller.CaptchaController;
 import com.shop.controller.UploadController;
-import com.shop.dto.CaptchaDto;
 import com.shop.result.Result;
 import com.shop.service.PerformancesService;
-import com.shop.vo.PerformanceVo;
+import com.shop.utils.GenerateId;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.imageio.ImageIO;
-import java.awt.*;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.List;
 
 @SpringBootTest
 class ShopApplicationTests {
@@ -29,6 +23,8 @@ class ShopApplicationTests {
     private UploadController uploadController;
     @Autowired
     private CaptchaController captchaController;
+   @Autowired
+   private StringRedisTemplate stringRedisTemplate;
 
     @Test
     void contextLoads() throws IOException {
@@ -57,8 +53,9 @@ class ShopApplicationTests {
     }
     @Test
     void test2(){
-        Result<CaptchaDto> captcha = captchaController.getCaptcha();
-        System.out.println(captcha);
+
+        stringRedisTemplate.opsForValue().set("stock:ticket:" + 1,"4000");
+
     }
 
 
