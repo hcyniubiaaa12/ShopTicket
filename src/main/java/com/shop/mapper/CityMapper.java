@@ -1,7 +1,10 @@
 package com.shop.mapper;
 
+import com.shop.dto.CityDto;
 import com.shop.entity.City;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+
+import java.util.List;
 
 /**
 * @author 陈增
@@ -11,6 +14,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 */
 public interface CityMapper extends BaseMapper<City> {
 
+    List<CityDto> getCityByEventId(Integer id);
 }
 
 

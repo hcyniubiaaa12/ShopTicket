@@ -10,7 +10,13 @@
             <result property="isDeleted" column="is_deleted" />
     </resultMap>
 
-    <sql id="Base_Column_List">
-        id,name,is_deleted
-    </sql>
+
+    <select id="getCityByEventId" resultType="com.shop.dto.CityDto">
+        SELECT DISTINCT c.id, c.name, v.name venue
+        FROM performances p
+                 JOIN EVENTS e ON p.`event_id` = e.id
+                 JOIN venues v ON p.`venue_id` = v.id
+                 JOIN city c ON c.id = v.city_id
+        WHERE e.id = #{id}
+    </select>
 </mapper>

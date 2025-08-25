@@ -70,6 +70,8 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders>
 
     @Override
     public Result saveOrder(Orders requestOrders) {
+        System.out.println(requestOrders);
+
         Integer userId = UserHold.getUser();
         Integer result = null;
         try {
@@ -147,6 +149,33 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders>
     @Override
     public List<OrderDto> queryOrder(Integer userId) {
         return ordersMapper.queryOrder(userId);
+    }
+
+    @Override
+    @Transactional
+    public Result cancel(Long id) {
+        Orders order = super.getById(id);
+        switch (order.getStatus()) {
+            case PAID:
+                return Result.fail("订单已支付");
+            case CANCELED:
+                return Result.fail("订单已取消");
+        }
+        String pendingKey = "order:pending:" + order.getUserId();
+        String stockKey = "stock:ticket:" + order.getTicketId();
+        stringRedisTemplate.opsForHash().increment(pendingKey, order.getPerformanceId().toString(), -order.getNum());
+        stringRedisTemplate.opsForValue().increment(stockKey, order.getNum());
+        UpdateWrapper<Orders> ordersUpdateWrapper = new UpdateWrapper<>();
+        ordersUpdateWrapper.set("status", 3)
+                .eq("id", id)
+                .eq("status", 1);
+        super.update(ordersUpdateWrapper);
+        UpdateWrapper<Ticket> ticketUpdateWrapper = new UpdateWrapper<>();
+        ticketUpdateWrapper.eq("id", order.getTicketId())
+                .setSql("stock = stock +" + order.getNum());
+        ticketService.update(ticketUpdateWrapper);
+
+        return Result.success("取消成功");
     }
 
 

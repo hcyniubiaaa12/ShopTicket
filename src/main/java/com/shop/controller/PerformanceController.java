@@ -23,55 +23,55 @@ public class PerformanceController {
 
     @GetMapping("/{id}")
     public Result<List<PerformanceDto>> getPerformanceByTypeId(@PathVariable Integer id) {
-        String performance = redisTemplate.opsForValue().get("performance:type:"+id);
-        if (performance == null) {
+//        String performance = redisTemplate.opsForValue().get("performance:type:"+id);
+//        if (performance == null) {
             List<PerformanceDto> list = performancesService.getPerformanceById(id);
-            if (list == null) {
-                redisTemplate.opsForValue().set("performance:type:"+id, " ",3,TimeUnit.SECONDS);
-                return Result.success(null);
-            }
-            redisTemplate.opsForValue().set("performance:type:"+id, JSONUtil.toJsonStr(list));
-        }
-        List<PerformanceDto> list = performancesService.getPerformanceById(id);
+//            if (list == null) {
+//                redisTemplate.opsForValue().set("performance:type:"+id, " ",3,TimeUnit.SECONDS);
+//                return Result.success(null);
+//            }
+//            redisTemplate.opsForValue().set("performance:type:"+id, JSONUtil.toJsonStr(list));
+//        }
+//        List<PerformanceDto> list = performancesService.getPerformanceById(id);
         return Result.success(list);
     }
 
     @GetMapping
     public Result<List<PerformanceDto>> getAllPerformance() {
-        String performance = redisTemplate.opsForValue().get("performance");
-        if (performance == null) {
+//        String performance = redisTemplate.opsForValue().get("performance");
+//        if (performance == null) {
             List<PerformanceDto> list = performancesService.getAllPerformance();
-            if (list == null) {
-                redisTemplate.opsForValue().set("performance", " ");
-                return Result.success(null);
-            }
-            redisTemplate.opsForValue().set("performance", JSONUtil.toJsonStr(list));
-            return Result.success(list);
-        }
-        List<PerformanceDto> list = JSONUtil.toList(performance, PerformanceDto.class);
+//            if (list == null) {
+//                redisTemplate.opsForValue().set("performance", " ");
+//                return Result.success(null);
+//            }
+//            redisTemplate.opsForValue().set("performance", JSONUtil.toJsonStr(list));
+//            return Result.success(list);
+//        }
+//        List<PerformanceDto> list = JSONUtil.toList(performance, PerformanceDto.class);
         return Result.success(list);
     }
 
     @GetMapping("/getPerformanceByEventId/{id}")
-    public Result<List<PerformanceDto>> getPerformanceByEventId(@PathVariable Integer id) {
-        List<PerformanceDto> list = performancesService.getPerformanceByEventId(id);
+    public Result<List<PerformanceDto>> getPerformanceByEventId(@PathVariable Integer id,Integer cityId) {
+        List<PerformanceDto> list = performancesService.getPerformanceByEventId(id,cityId);
         return Result.success(list);
     }
 
     @GetMapping("/time/{id}")
-    public Result<List<TimeDto>> getTimeByEventId(@PathVariable Integer id) {
-        String showTime = redisTemplate.opsForValue().get("time:" + id);
-        if (showTime == null) {
-            List<TimeDto> list = performancesService.getTimeByEventId(id);
-            if (list == null) {
-                redisTemplate.opsForValue().set("time:" + id, " ");
-                return Result.success(null);
-            }
-            redisTemplate.opsForValue().set("time:" + id, JSONUtil.toJsonStr(list));
-            return Result.success(list);
-        }
-        List<TimeDto> list = JSONUtil.toList(showTime, TimeDto.class);
-        redisTemplate.opsForValue().set("time:" + id, JSONUtil.toJsonStr(list));
+    public Result<List<TimeDto>> getTimeByEventId(@PathVariable Integer id,Integer cityId) {
+//        String showTime = redisTemplate.opsForValue().get("time:" + id);
+//        if (showTime == null) {
+            List<TimeDto> list = performancesService.getTimeByEventId(id,cityId);
+//            if (list == null) {
+//                redisTemplate.opsForValue().set("time:" + id, " ");
+//                return Result.success(null);
+//            }
+//            redisTemplate.opsForValue().set("time:" + id, JSONUtil.toJsonStr(list));
+//            return Result.success(list);
+//        }
+//        List<TimeDto> list = JSONUtil.toList(showTime, TimeDto.class);
+//        redisTemplate.opsForValue().set("time:" + id, JSONUtil.toJsonStr(list));
 
         return Result.success(list);
     }

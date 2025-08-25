@@ -28,14 +28,11 @@
                i.`url`,
                p.`duration`,
                p.`start_time`
-
         FROM orders o
                  JOIN ticket t
                       ON o.`ticket_id` = t.`id`
                  JOIN ticket_type tt
                       ON tt.`id` = t.`ticket_type_id`
-                 JOIN images i
-                      ON tt.`event_id` = i.`event_id`
                  JOIN performances p
                       ON p.`id` = o.`performance_id`
                  JOIN EVENTS e
@@ -44,7 +41,18 @@
                       ON v.`id` = p.`venue_id`
                  JOIN city c
                       ON c.`id` = v.`city_id`
+                join images i
+                on  i.event_id = p.event_id
         WHERE o.`user_id` = #{userId}
+        and i.`is_deleted` = 0
+        and o.`is_deleted` = 0
+        and t.`is_deleted` = 0
+        and p.`is_deleted` = 0
+        and tt.`is_deleted` = 0
+        and e.`is_deleted` = 0
+        and v.`is_deleted` = 0
+        and c.`is_deleted` = 0
+        order by o.`create_time` desc
 
     </select>
 </mapper>

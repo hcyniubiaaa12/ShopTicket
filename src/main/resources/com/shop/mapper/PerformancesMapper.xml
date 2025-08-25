@@ -7,16 +7,16 @@
 
     <select id="getAllPerformance" resultType="com.shop.dto.PerformanceDto">
         SELECT
-               min_pr.min_price       as min_price,
-               e.id                   AS event_id,
-               e.title,
-               v.name                 AS venue_name,
-               c.name                 AS city_name,
-               i.url,                                    -- 注意：如果每场图不同，这里会出问题（后面说）
-               MIN(p.start_time)      AS first_show,
-               MAX(p.start_time)      AS last_show,
-               COUNT(p.id)            AS total_performances,
-               MIN(p.available_seats) AS available_seats -- 可选
+            min_pr.min_price       AS min_price,
+            e.id                   AS event_id,
+            e.title,
+            i.url,                                  -- 注意：如果每场图不同，这里会出问题（后面说）
+            MIN(p.start_time)      AS first_show,
+            MAX(p.start_time)      AS last_show,
+            e.artist,
+            v.name as venue,
+            c.name as city,
+            c.id AS cityId
 
 
         FROM performances p
@@ -28,39 +28,39 @@
                       ON min_pr.event_id = e.id
                  JOIN venues v ON p.venue_id = v.id
                  JOIN city c ON v.city_id = c.id
+
                  JOIN images i ON e.id = i.event_id AND i.is_deleted = 0 -- 改为关联 event 的图，不是 performance
 
         WHERE p.is_deleted = 0
           AND p.status = 0
           AND e.is_deleted = 0
           AND e.status = 0
-          AND v.is_deleted = 0
-          AND c.is_deleted = 0
           AND i.is_deleted = 0
+
 
         GROUP BY e.id,
                  e.title,
-                 v.name,
-                 v.address,
                  c.name,
-                 i.url
+                 v.name,
+                 i.url,
+                 c.id
 
 
         ORDER BY min_price
     </select>
     <select id="getPerformanceById" resultType="com.shop.dto.PerformanceDto">
-        SELECT
-               min_pr.min_price       as min_price,
-               e.id                   AS event_id,
+        SELECT min_pr.min_price  AS min_price,
+               e.id              AS event_id,
                e.title,
-               t.name                 AS type_name,
-               v.name                 AS venue_name,
-               c.name                 AS city_name,
-               i.url,                                    -- 注意：如果每场图不同，这里会出问题（后面说）
-               MIN(p.start_time)      AS first_show,
-               MAX(p.start_time)      AS last_show,
-               COUNT(p.id)            AS total_performances,
-               MIN(p.available_seats) AS available_seats -- 可选
+               i.url, -- 注意：如果每场图不同，这里会出问题（后面说）
+               MIN(p.start_time) AS first_show,
+               MAX(p.start_time) AS last_show,
+               e.artist,
+               v.name            as venue,
+               c.name            as city,
+               c.id AS cityId,
+               t.name           as typeName
+
 
 
         FROM performances p
@@ -70,28 +70,27 @@
                        WHERE price.`is_deleted` = 0
                        GROUP BY event_id) min_pr
                       ON min_pr.event_id = e.id
-                 JOIN event_type t ON t.id = e.type_id
                  JOIN venues v ON p.venue_id = v.id
                  JOIN city c ON v.city_id = c.id
+                 JOIN event_type t ON e.type_id = t.id
+
                  JOIN images i ON e.id = i.event_id AND i.is_deleted = 0 -- 改为关联 event 的图，不是 performance
 
         WHERE p.is_deleted = 0
           AND p.status = 0
           AND e.is_deleted = 0
           AND e.status = 0
-          AND t.is_deleted = 0
-          AND v.is_deleted = 0
-          AND c.is_deleted = 0
           AND i.is_deleted = 0
           AND t.id = #{id}
 
+
         GROUP BY e.id,
                  e.title,
-                 t.name,
-                 v.name,
-                 v.address,
                  c.name,
-                 i.url
+                 v.name,
+                 i.url,
+                 c.id
+
 
         ORDER BY min_price
     </select>
@@ -100,15 +99,15 @@
         SELECT e.id              as event_id,
                e.title,
                min_pr.min_price  as min_price,
-               v.name            AS venue_name,
-               c.name            AS city_name,
+               v.name            AS venue,
+               c.name            AS city,
                i.url,
+               p.start_time       AS firstShow,
+               p.start_time       as lastShow,
+               c.id as cityId,
+               p.duration ,
                p.description,
-               p.available_seats,
-               p.duration,
-               MIN(p.start_time) AS first_show,
-               MAX(p.start_time) AS last_show,
-               COUNT(p.id)       AS total_performances
+               p.available_seats
         FROM performances p
                  JOIN EVENTS e ON p.event_id = e.id
                  JOIN (SELECT MIN(price) min_price, event_id
@@ -124,24 +123,32 @@
           AND c.is_deleted = 0
           AND i.is_deleted = 0
           AND e.id = #{id}
+          and c.id = #{cityId}
         GROUP BY e.id,
                  e.title,
                  v.name,
                  c.name,
+                 p.description,
                  p.available_seats,
                  p.duration,
-                 p.description,
-                 i.url
+                 i.url,
+                 c.id,
+                 p.start_time
         ORDER BY min_price
 
     </select>
 
     <select id="getTimeByEventId" resultType="com.shop.dto.TimeDto">
-        SELECT p.id ,start_time AS time
+        -- 查询苏州站有哪些演出时间
+        SELECT DISTINCT p.id,
+                        p.start_time time
         FROM performances p
-                 JOIN EVENTS e ON p.`event_id` = e.`id`
-        WHERE e.`id` = #{id}
-        AND p.`is_deleted` = 0
-        AND e.`is_deleted` = 0
+                 JOIN events e ON p.event_id = e.id
+                 JOIN venues v ON p.venue_id = v.id
+                 JOIN city c ON c.id = v.city_id
+        WHERE c.id = #{cityId}
+          AND e.id = #{id}
+        ORDER BY p.start_time;
     </select>
+
 </mapper>

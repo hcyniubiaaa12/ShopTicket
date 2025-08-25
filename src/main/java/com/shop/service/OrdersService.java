@@ -20,4 +20,6 @@ public interface OrdersService extends IService<Orders> {
     Result pay(Long id);
 
     List<OrderDto> queryOrder(Integer userId);
+
+    Result cancel(Long id);
 }

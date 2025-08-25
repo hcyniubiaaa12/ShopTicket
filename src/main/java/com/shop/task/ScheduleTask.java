@@ -9,6 +9,7 @@ import com.shop.service.TicketService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -21,9 +22,10 @@ public class ScheduleTask {
     private TicketService ticketService;
 
     @Scheduled(cron = "0/30 * * * * ?")
+    @Transactional
     public void task() {
-        LocalDateTime start = LocalDateTime.of(2025, 8, 25, 18, 0, 0);
-        LocalDateTime end = LocalDateTime.of(2025, 8, 25, 19, 22, 0);
+        LocalDateTime start = LocalDateTime.of(2025, 8, 26, 13, 0, 0);
+        LocalDateTime end = LocalDateTime.of(2025, 8, 26, 20, 22, 0);
         if (LocalDateTime.now().isBefore(start) || LocalDateTime.now().isAfter(end)) {
             return;
 
@@ -32,23 +34,22 @@ public class ScheduleTask {
         ordersQueryWrapper.select("create_time", "num", "ticket_id", "id")
                 .eq("status", 1);
         List<Orders> list = ordersService.list(ordersQueryWrapper);
-        list.forEach(order -> {
-            if (order.getCreateTime().plusMinutes(30).isBefore(LocalDateTime.now())) {
+        for (Orders orders : list) {
+            LocalDateTime createTime = orders.getCreateTime();
+            if (LocalDateTime.now().isAfter(createTime.plusMinutes(30))) {
                 UpdateWrapper<Orders> ordersUpdateWrapper = new UpdateWrapper<>();
-                ordersUpdateWrapper.set("status", 3);
-                ordersUpdateWrapper.eq("status", 1);
-                ordersUpdateWrapper.eq("id", order.getId());
-                boolean update = ordersService.update(ordersUpdateWrapper);
-                System.out.println(update);
-                if (update) {
-                    UpdateWrapper<Ticket> ticketUpdateWrapper = new UpdateWrapper<>();
-                    ticketUpdateWrapper.eq("id", order.getTicketId());
-                    ticketUpdateWrapper.setSql("stock = stock + " + order.getNum());
-                    ticketService.update(ticketUpdateWrapper);
+                ordersUpdateWrapper.eq("id", orders.getId())
+                        .set("status", 3);
+                ordersService.update(ordersUpdateWrapper);
+                Ticket ticket = ticketService.getById(orders.getTicketId());
+                ticket.setStock(ticket.getStock() + orders.getNum());
+                ticketService.updateById(ticket);
 
-                }
+
             }
-        });
+
+        }
+
 
     }
 }

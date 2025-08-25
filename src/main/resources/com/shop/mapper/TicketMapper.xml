@@ -15,18 +15,19 @@
 
 
     <select id="getAllTicketById" resultType="com.shop.dto.TicketDto">
-        select t.`id`,
-               t.`stock`,
-               tt.`name`,
-               p.`price`
-        from ticket_type tt
-                 join ticket t
-                      on tt.`id` = t.`ticket_type_id`
-                 join price p
-                      on p.`id` = tt.`price_id`
-        where p.is_deleted = 0
-          and tt.is_deleted = 0
-          and t.is_deleted = 0
-          and t.`performance_id` = #{id}
+        -- 根据 performance_id 查询票价
+        SELECT
+            t.id,
+            tt.name ,
+            pr.price,
+            t.stock
+
+        FROM ticket t
+                 JOIN ticket_type tt ON tt.id = t.ticket_type_id
+                 JOIN price pr ON pr.id = tt.price_id
+        WHERE t.performance_id = #{id}
+        ORDER BY pr.price;
+
+
     </select>
 </mapper>

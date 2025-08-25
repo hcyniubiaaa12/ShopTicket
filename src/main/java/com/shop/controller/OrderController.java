@@ -42,4 +42,9 @@ public class OrderController {
         return Result.success( list);
     }
 
+    @PostMapping("/cancel/{id}")
+    public Result cancel(@PathVariable Long id){
+        return ordersService.cancel(id);
+    }
+
 }

@@ -1,7 +1,10 @@
 package com.shop.service;
 
+import com.shop.dto.CityDto;
 import com.shop.entity.City;
 import com.baomidou.mybatisplus.extension.service.IService;
+
+import java.util.List;
 
 /**
 * @author 陈增
@@ -10,4 +13,5 @@ import com.baomidou.mybatisplus.extension.service.IService;
 */
 public interface CityService extends IService<City> {
 
+    List<CityDto> getCityByEventId(Integer id);
 }
