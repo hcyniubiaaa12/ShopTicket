@@ -5,8 +5,6 @@
       <div class="user-avatar">
         <img :src=loginStore.avatar >
       
-        
-      
       </div>
       <div class="user-info" >
         <h3 class="user-name">用户:{{ loginStore.username }}</h3>
@@ -78,6 +76,11 @@
             <van-icon name="arrow" />
           </template>
         </van-cell>
+        <van-cell title="退出" class="logout-button" is-link @click="logout">
+          <template #right-icon>
+            <van-icon name="arrow" />
+          </template>
+        </van-cell>
       </van-cell-group>
     </div>
 
@@ -137,6 +140,14 @@ const editProfile = () => {
   console.log('编辑资料')
 }
 
+// 退出登录
+const logout = () => {
+  // 清除登录状态
+  loginStore.logout()
+  
+  // 跳转到登录页面
+  router.push('/login')
+}
 
 const setActiveFooterItem = (itemId) => {
   activeFooterItem.value = itemId
@@ -283,4 +294,5 @@ const setActiveFooterItem = (itemId) => {
   font-size: 18px;
   margin-bottom: 4px;
 }
+
 </style>

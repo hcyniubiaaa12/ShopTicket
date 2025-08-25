@@ -29,6 +29,19 @@ export const useLoginStore = defineStore('login', {
             localStorage.setItem('token', token)
             localStorage.setItem('isLogin', 'true')
         },
+        logout(){
+            this.isLogin = false
+            this.token = null
+            this.userId = null
+            this.username = null
+            this.avatar = null     
+            // 清除localStorage中的登录信息
+            localStorage.removeItem('token')
+            localStorage.removeItem('userId')
+            localStorage.removeItem('username')
+            localStorage.removeItem('avatar')
+            localStorage.removeItem('isLogin')
+        }
 
 
 

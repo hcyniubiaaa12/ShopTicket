@@ -30,7 +30,6 @@
         <p class="event-location">
           <van-icon name="location-o" />
           {{ eventData.venueName }}
-
         </p>
         <p class="event-price">
           <van-icon name="coupon-o" />
@@ -45,7 +44,7 @@
         <van-collapse-item title="演出详情" name="description">
           <p>
             座位：{{ eventData.availableSeats }} 个 <br />
-            演出时长：约 {{ eventData.duration }} 分钟（以现场为准） <br>
+            演出时长：约 {{ eventData.duration }} 分钟（以现场为准）<br>
             {{ eventData.description }}
           </p>
         </van-collapse-item>
@@ -114,11 +113,11 @@
           </div>
         </div>
 
-        <!-- 修改票数选择区域为加减按钮形式 -->
+        <!-- 票数选择 -->
         <div class="ticket-section" v-if="visible">
           <h3>票数</h3>
           <div class="quantity-selector">
-            <span class="quantity-limit">每笔订单限购4张</span>
+            <span class="quantity-limit">每场演唱会限购4张</span>
             <div class="quantity-control">
               <button class="quantity-btn" @click="decreaseQuantity" :disabled="selectedQuantity <= 1">-</button>
               <span class="quantity-display">{{ selectedQuantity }}</span>
@@ -130,9 +129,55 @@
 
         <div class="modal-footer">
           <button :disabled="!selectedDate || !selectedPrice"
-            :class="['buy-button', { disabled: !selectedDate || !selectedPrice }]" @click="confirmPurchase">
+            :class="['buy-button', { disabled: !selectedDate || !selectedPrice }]" @click="createOrderDirectly">
             确认购票
           </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 支付确认弹窗 -->
+    <div v-if="showPaymentConfirm" class="payment-confirm-modal">
+      <div class="payment-content">
+        <!-- 图标 -->
+        <div class="payment-icon">
+          <van-icon name="bill-o" size="40" color="#FF69B4" />
+        </div>
+
+        <!-- 标题与描述 -->
+        <h3 class="payment-title">确认支付</h3>
+        <p class="payment-desc">
+          您即将为以下订单完成支付，请确认信息无误。
+        </p>
+
+        <!-- 订单信息 -->
+        <div class="order-summary">
+          <div class="summary-row">
+            <span>演出名称</span>
+            <span class="value">{{ eventData.title }}</span>
+          </div>
+          <div class="summary-row">
+            <span>场次时间</span>
+            <span class="value">{{ formatDate(selectedDate) }}</span>
+          </div>
+          <div class="summary-row">
+            <span>票价类型</span>
+            <span class="value">{{ selectedPrice?.name }}</span>
+          </div>
+          <div class="summary-row">
+            <span>票数</span>
+            <span class="value">{{ selectedQuantity }} 张</span>
+          </div>
+          <div class="summary-total">
+            <strong>合计金额</strong>
+            <strong class="amount">¥{{ (selectedPrice?.price * selectedQuantity).toFixed(2) }}</strong>
+          </div>
+        </div>
+
+        <!-- 操作按钮 -->
+        <div class="payment-actions">
+          <button class="btn-cancel" @click="cancelPayment">取消</button>
+          <button class="btn-confirm" @click="confirmPayment">确认支付</button>
         </div>
       </div>
     </div>
@@ -145,46 +190,43 @@ import { useRoute, useRouter } from 'vue-router'
 import { fetchDetail } from '../../public/util/performance/fetchDetail'
 import { fetchTimeById } from '../../public/util/performance/fetchTime'
 import { fetchhAllTicket } from '../../public/util/ticket/fetchAllTicket'
-import {useLoginStore} from '@/stores/login'
-const loginStore = useLoginStore()
+import { createOrder } from '../../public/util/order/createOrder'
+import { payOrder } from '../../public/util/order/payOrder'
+import { useLoginStore } from '@/stores/login'
 
+
+
+const loginStore = useLoginStore()
 const route = useRoute()
 const router = useRouter()
+
 const activeCollapse = ref(['description'])
 const isFavorite = ref(false)
 const notice = "1. 请在演出前30分钟入场\n2. 请勿携带易燃易爆物品\n3. 请勿拍照录像\n4. 1.2米以下儿童谢绝入场\n5. 请妥善保管好个人财物"
 
-// 购票弹窗相关状态
+// 演出数据
+const eventData = ref({})
 const showTicketModal = ref(false)
+const showPaymentConfirm = ref(false)
 const selectedDate = ref('')
 const selectedPrice = ref(null)
-const selectedQuantity = ref(1) // 添加票数选择，默认为1
+const selectedQuantity = ref(1)
 const dateObject = ref([])
 const timeList = ref([])
 const ticketList = ref([])
 const visible = ref(false)
+const createdOrderId = ref(null) // 保存创建的订单ID
 
-// 演出数据 
-const eventData = ref([])
-
-// 模拟演出场次数据
+// 模拟场次数据
 const performanceDates = computed(() => {
-  if (!eventData.value.firstShow) return []
-
-  return timeList.value
-
+  return timeList.value || []
 })
 
-
 onMounted(async () => {
-  const { data } = await fetchDetail(route.params.id);
+  const { data } = await fetchDetail(route.params.id)
   if (data.code === 200) {
-    eventData.value = data.data[0];
-  
-    
-
+    eventData.value = data.data[0]
   }
-
 })
 
 // 返回上一页
@@ -195,48 +237,35 @@ const goBack = () => {
 // 切换想看状态
 const toggleFavorite = () => {
   isFavorite.value = !isFavorite.value
-  if (isFavorite.value) {
-    console.log('添加演出到想看列表:', eventData.value.id)
-  } else {
-    console.log('从想看列表移除演出:', eventData.value.id)
-  }
+  console.log(isFavorite.value ? '添加演出到想看列表' : '从想看列表移除', eventData.value.id)
 }
 
-// 分享演出
-const shareEvent = () => {
-  console.log('分享演出:', eventData.value.id)
-}
-
-// 购票
+// 购票：打开选票弹窗
 const buyTicket = async () => {
-    if (!loginStore.isLogin) {
-    // 如果未登录，跳转到登录页面
+  if (!loginStore.isLogin) {
     router.push('/login')
+    return
   }
   showTicketModal.value = true
-  let { data } = await fetchTimeById(eventData.value.eventId)
-
+  const { data } = await fetchTimeById(eventData.value.eventId)
   if (data.code === 200) {
     timeList.value = data.data
-
-
-
   }
 }
 
 // 关闭购票弹窗
 const closeTicketModal = () => {
   showTicketModal.value = false
+  showPaymentConfirm.value = false
 }
 
-// 选择场次日期
+// 选择场次
 const selectDate = async (date) => {
   dateObject.value = date
   selectedDate.value = date.time
-  const res = await fetchhAllTicket(date.id);
+  const res = await fetchhAllTicket(date.id)
   if (res.data.code === 200) {
     ticketList.value = res.data.data
-
   }
 }
 
@@ -246,50 +275,88 @@ const selectPrice = (price) => {
   selectedPrice.value = price
 }
 
-// 添加增加票数的方法
+// 修改票数
 const increaseQuantity = () => {
-  if (selectedQuantity.value < 4) {
-    selectedQuantity.value++
-  }
+  if (selectedQuantity.value < 4) selectedQuantity.value++
 }
-
-// 添加减少票数的方法
 const decreaseQuantity = () => {
-  if (selectedQuantity.value > 1) {
-    selectedQuantity.value--
-  }
+  if (selectedQuantity.value > 1) selectedQuantity.value--
 }
 
-// 格式化日期显示
+// 格式化日期
 const formatDate = (dateStr) => {
+  if (!dateStr) return ''
   const date = new Date(dateStr)
   return `${date.getMonth() + 1}月${date.getDate()}日`
 }
 
-// 确认购票
-const confirmPurchase = () => {
-  if (selectedDate.value && selectedPrice.value) {
-    console.log('确认购票:', {
-      id: dateObject.value.id,
-      eventId: eventData.value.eventId,
-      date: dateObject.value.time,
+// 直接创建订单（替代原来的显示支付确认弹窗）
+const createOrderDirectly = async () => {
+  if (!selectedDate.value || !selectedPrice.value) return
+
+  try {
+    const orderData = {
+      userId: loginStore.userId,
+      num: selectedQuantity.value,
       price: selectedPrice.value.price,
       ticketId: selectedPrice.value.id,
-      quantity: selectedQuantity.value // 添加票数信息
-    })
+      performanceId: dateObject.value.id,
 
-    closeTicketModal()
+    }
+
+    const { data } = await createOrder(orderData)
+   
+    if (data.code === 200) {
+      // 保存订单ID
+     
+      createdOrderId.value = data.data
+    
+      // 显示支付确认弹窗
+      showPaymentConfirm.value = true
+    } else {
+      alert(data.data)
+    }
+  } catch (error) {
+    console.error('订单创建失败:', error)
+    alert('网络错误，请稍后重试')
   }
+}
+
+// 确认支付（显示成功）
+const confirmPayment = async () => {
+  let { data } = await payOrder(createdOrderId.value);
+  console.log(createdOrderId.value);
+  
+  if (data.code === 200) {
+    // 删除创建的订单ID
+    createdOrderId.value = null
+    // 显示购票成功
+    alert('购票成功！')
+    // 关闭所有弹窗
+    closeTicketModal()
+    showPaymentConfirm.value = false
+    // 跳转到订单页面
+    router.push('/order')
+  }
+
+}
+
+// 取消支付（跳转到订单未完成页）
+const cancelPayment = () => {
+  // 关闭支付确认弹窗
+  showPaymentConfirm.value = false
+  // 跳转到订单未完成页面
+  router.push(`/order?status=pending&id=${createdOrderId.value}`)
 }
 </script>
 
 <style scoped>
+/* ===== 原有样式保持不变 ===== */
 .event-detail-page {
   padding-bottom: 70px;
   background-color: #f5f5f5;
 }
 
-/* 顶部导航栏 */
 .detail-header {
   display: flex;
   align-items: center;
@@ -302,7 +369,8 @@ const confirmPurchase = () => {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-.header-left {
+.header-left,
+.header-right {
   width: 40px;
   height: 40px;
   display: flex;
@@ -318,16 +386,6 @@ const confirmPurchase = () => {
   font-weight: bold;
 }
 
-.header-right {
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-
-/* 演出海报 */
 .event-poster {
   width: 100%;
   height: 300px;
@@ -339,7 +397,6 @@ const confirmPurchase = () => {
   object-fit: cover;
 }
 
-/* 演出信息 */
 .event-info {
   background-color: #fff;
   padding: 20px 15px;
@@ -351,10 +408,6 @@ const confirmPurchase = () => {
   font-size: 20px;
   font-weight: bold;
   color: #333;
-}
-
-.event-meta {
-  margin-bottom: 20px;
 }
 
 .event-meta p {
@@ -375,7 +428,6 @@ const confirmPurchase = () => {
   font-weight: bold;
 }
 
-/* 演出详情 */
 .event-description {
   background-color: #fff;
   padding: 0 15px;
@@ -393,7 +445,6 @@ const confirmPurchase = () => {
   white-space: pre-line;
 }
 
-/* 底部操作栏 */
 .event-detail-footer {
   position: fixed;
   bottom: 0;
@@ -419,7 +470,6 @@ const confirmPurchase = () => {
   align-items: center;
   justify-content: center;
   background-color: #FFD700;
-  /* 黄色 */
   color: #333;
   font-weight: bold;
   cursor: pointer;
@@ -431,14 +481,9 @@ const confirmPurchase = () => {
   align-items: center;
   justify-content: center;
   background-color: #FF69B4;
-  /* 粉色 */
   color: white;
   font-weight: bold;
   cursor: pointer;
-}
-
-.favorite-section.favorited {
-  background-color: #FFD700;
 }
 
 /* 购票弹窗样式 */
@@ -558,11 +603,6 @@ const confirmPurchase = () => {
   background-color: #fff0f5;
 }
 
-.date-item .day {
-  font-size: 12px;
-  color: #999;
-}
-
 .price-selector {
   display: flex;
   flex-wrap: wrap;
@@ -668,5 +708,149 @@ const confirmPurchase = () => {
 .buy-button.disabled {
   background-color: #ccc;
   cursor: not-allowed;
+}
+
+/* ===== 支付确认弹窗样式 ===== */
+.payment-confirm-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.4);
+  z-index: 1100;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.payment-content {
+  width: 90%;
+  max-width: 380px;
+  background: #fff;
+  border-radius: 20px;
+  padding: 25px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  animation: scaleIn 0.3s ease-out;
+}
+
+.payment-icon {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  width: 60px;
+  height: 60px;
+  background: #fff0f5;
+  border-radius: 50%;
+  margin-bottom: 16px;
+}
+
+.payment-title {
+  margin: 0 0 8px 0;
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+}
+
+.payment-desc {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+.order-summary {
+  background-color: #f9f9fb;
+  border-radius: 12px;
+  padding: 16px;
+  font-size: 14px;
+  color: #555;
+  text-align: left;
+  margin-bottom: 24px;
+  border: 1px solid #eee;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.summary-row .value {
+  font-weight: 500;
+  color: #333;
+}
+
+.summary-total {
+  font-size: 16px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed #ddd;
+  display: flex;
+  justify-content: space-between;
+  color: #e60000;
+  font-weight: bold;
+}
+
+.payment-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-cancel {
+  flex: 1;
+  padding: 12px;
+  background-color: #f0f0f0;
+  color: #666;
+  border: none;
+  border-radius: 16px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-cancel:hover {
+  background-color: #e0e0e0;
+}
+
+.btn-confirm {
+  flex: 1;
+  padding: 12px;
+  background-color: #FF69B4;
+  color: white;
+  border: none;
+  border-radius: 16px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-confirm:hover {
+  background-color: #e94e9c;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 </style>
