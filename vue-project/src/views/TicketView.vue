@@ -10,18 +10,24 @@
 
     <!-- 演出列表 -->
     <div class="events-list">
-      <div class="event-card" v-for="(event, index) in filteredEvents" :key="index" @click="goToEventDetail(event.eventId)">
+      <div class="event-card" v-for="(event, index) in filteredEvents" :key="index"
+
+        @click="goToEventDetail(event.eventId,event.cityId)">
         <div class="event-image">
           <img :src="event.url" />
         </div>
         <div class="event-info">
-          <h3 class="event-title">{{ event.title + '-' + event.cityName + '站' }}</h3>
-          <p class="event-time">
+          <h3 class="event-title">{{ event.title + '-' + event.city + '站' }}</h3>
+          <p class="event-arist">{{ event.artist }}</p>
+          <p class="event-time" v-if="event.firstShow != event.lastShow">
             {{
-              event.totalPerformances > 1 ? event.firstShow + ' - ' + event.lastShow : event.firstShow
+              event.firstShow + ' - ' + event.lastShow
             }}
+
           </p>
-          <p class="event-location">{{ event.venueName }}</p>
+          <p class="event-time" v-else>{{ event.firstShow }}</p>
+          <p class="event-location">{{ event.venue }}</p>
+
           <p class="event-price">¥{{ event.minPrice || '待定' }} 起</p>
         </div>
       </div>
@@ -76,9 +82,9 @@ const filteredEvents = computed(() => {
 
   if (!selectedCategory) return []
 
-  // 使用 typeName 匹配（后端返回的是 typeName，不是 category 字段）
+  // 使用 typeName 匹配
 
-
+   
   return events.value.filter(event => event.typeName === selectedCategory.name)
 })
 
@@ -86,10 +92,11 @@ const filteredEvents = computed(() => {
 const setActiveCategory = async (categoryId) => {
   activeCategory.value = categoryId
   try {
-     let{data}  =  await fetchPerformanceById(categoryId)
+    let { data } = await fetchPerformanceById(categoryId)
     if (data && data.code === 200) {
-      events.value =data.data
-    
+      events.value = data.data
+      console.log('获取演出数据成功:', data.data);
+
     } else {
       events.value = []
       console.warn('数据获取失败或为空', data?.message)
@@ -106,10 +113,13 @@ const setActiveCategory = async (categoryId) => {
 }
 
 // 跳转到演出详情
-const goToEventDetail = (eventId) => {
+const goToEventDetail = (eventId,cityId) => {
   console.log('查看演出详情:', eventId);
-  
-  router.push(`/event/${eventId}`)
+
+  router.push({
+    path: `/event/${eventId}`,
+    query: { cityId: cityId }
+  })
 }
 
 // 设置底部导航
@@ -135,6 +145,7 @@ const setActiveFooterItem = (itemId) => {
 onMounted(async () => {
   try {
     const { data } = await fetchAllType()
+
     if (data.code === 200) {
       categories.value = data.data.map(item => ({
         id: item.id,
@@ -271,7 +282,11 @@ watch(
   object-position: center;
   display: block;
 }
-
+.event-arist {
+  margin: 4px 0;
+  font-size: 12px;
+  color: orange
+}
 .event-info {
   flex: 1;
   padding: 8px;

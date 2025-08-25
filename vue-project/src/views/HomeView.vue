@@ -57,19 +57,23 @@
       </div>
       <div class="events-list">
         <div class="event-card" v-for="(event, index) in hotEvents" :key="index"
-          @click="goToEventDetail(event.eventId)">
+          @click="goToEventDetail(event.eventId,event.cityId)">
           <div class="event-image">
             <img :src="event.url">
             <div class="event-tag" v-if="event.tag">{{ event.tag }}</div>
           </div>
           <div class="event-info">
-            <h3 class="event-title">{{ event.title + '-' + event.cityName + '站' }}</h3>
-            <p class="event-time">
+            <h3 class="event-title">{{ event.title + '-' + event.city + '站' }}</h3>
+            <p class="event-arist">{{ event.artist }}</p>
+            <p class="event-time" v-if="event.firstShow != event.lastShow">
               {{
-                event.totalPerformances > 1 ? event.firstShow + ' - ' + event.lastShow : event.firstShow
+                event.firstShow + ' - ' + event.lastShow
               }}
+
             </p>
-            <p class="event-location">{{ event.venueName }}</p>
+            <p class="event-time" v-else>{{ event.firstShow }}</p>
+            <p class="event-location">{{ event.venue }}</p>
+
             <p class="event-price">¥{{ event.minPrice }} 起</p>
           </div>
         </div>
@@ -139,7 +143,7 @@ onMounted(async () => {
     const res = await fetchAllPerformance()
     const result = await fetchCity();
     if (result.data.code === 200) {
-  
+
 
       city.value = result.data.data;
 
@@ -147,7 +151,9 @@ onMounted(async () => {
     if (res.data.code === 200) {
       hotEvents.value = res.data.data.slice(0, 5); // 取前5条热门演出
    
-      
+
+
+
     } else {
       console.warn('获取演出数据失败:', res.data.message);
     }
@@ -194,11 +200,13 @@ const goToCategory = (categoryId) => {
   router.push(`/ticket?category=${categoryId}`)
 }
 
-const goToEventDetail = (eventId) => {
+const goToEventDetail = (eventId,cityId) => {
   console.log('查看演出详情:', eventId)
 
-
-  router.push(`/event/${eventId}`)
+  router.push({
+    path: `/event/${eventId}`,
+    query: { cityId: cityId }
+  })
 }
 
 const searchValue = ref('')
@@ -398,11 +406,17 @@ const setActiveFooterItem = (itemId) => {
   color: #666;
 }
 
+.event-arist {
+  margin: 4px 0;
+  font-size: 12px;
+  color: orange
+}
+
 .event-price {
   color: #ff6a00;
   font-weight: bold;
   font-size: 15px;
-  margin-top: auto;
+  margin-bottom: auto;
 }
 
 /* 底部导航栏 */

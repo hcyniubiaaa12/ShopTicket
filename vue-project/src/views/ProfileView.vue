@@ -5,8 +5,6 @@
       <div class="user-avatar">
         <img :src=loginStore.avatar >
       
-        
-      
       </div>
       <div class="user-info" >
         <h3 class="user-name">用户:{{ loginStore.username }}</h3>
@@ -19,11 +17,12 @@
 
     <!-- 用户统计数据 -->
     <div class="user-stats">
-      <div class="stat-item" v-for="(stat, index) in stats" :key="index">
+      <div class="stat-item" v-for="(stat, index) in stats" :key="index" @click="goToOrder(stat.status)">
         <p class="stat-value">{{ stat.value }}</p>
         <p class="stat-label">{{ stat.label }}</p>
       </div>
     </div>
+
 
     <!-- 功能菜单 -->
     <div class="menu-section">
@@ -78,6 +77,11 @@
             <van-icon name="arrow" />
           </template>
         </van-cell>
+        <van-cell title="退出" class="logout-button" is-link @click="logout">
+          <template #right-icon>
+            <van-icon name="arrow" />
+          </template>
+        </van-cell>
       </van-cell-group>
     </div>
 
@@ -98,9 +102,10 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useLoginStore } from '@/stores/login'
+import { fetchOrder } from '../../public/util/order/fetchOrder'
+import { fetchComment } from '../../public/util/performance/fetchComment'
+
 const loginStore = useLoginStore()
-
-
 const router = useRouter()
 const activeFooterItem = ref('profile')
 
@@ -114,29 +119,106 @@ const footerItems = ref([
 
 // 用户统计数据
 const stats = ref([
-  { value: 8, label: '待支付' },
-  { value: 3, label: '待观看' },
-  { value: 12, label: '已完成' },
-  { value: 2, label: '优惠券' }
+  { value: 0, label: '待支付', status: '待支付' },
+  { value: 0, label: '待观看', status: '待观看' },
+  { value: 0, label: '已完成', status: '已支付' },
+  { value: 0, label: '已取消', status: '已取消' },
+  { value: 0, label: '我的评价', status: 'comment' }
 ])
 
+// 用户评价数据
+const comments = ref([])
+
 // 检查登录状态
-onMounted(() => {
+onMounted(async () => {
   // 模拟检查登录状态的逻辑
   // 实际项目中可以从store、localStorage或API获取用户登录状态
   if (!loginStore.isLogin) {
     // 如果未登录，跳转到登录页面
     router.push('/login')
   } else {
-    router.push('/profile')
+    // 获取真实的订单统计数据
+    await loadOrderStats()
+    // 获取用户评价数据
+    await loadComments()
   }
 })
+
+// 加载订单统计数据
+const loadOrderStats = async () => {
+  try {
+    const { data } = await fetchOrder()
+    if (data.code === 200) {
+      const orders = data.data
+      
+      // 统计各类订单数量
+      const pendingCount = orders.filter(order => order.status === '待支付').length
+      const watchingCount = orders.filter(order => order.status === '待观看').length
+      const completedCount = orders.filter(order => order.status === '已支付').length
+      const cancelledCount = orders.filter(order => order.status === '已取消').length
+      
+      stats.value[0].value = pendingCount
+      stats.value[1].value = watchingCount
+      stats.value[2].value = completedCount
+      stats.value[3].value = cancelledCount
+      
+      // 更新我的评价数量
+      stats.value[4].value = comments.value.length
+    }
+  } catch (error) {
+    console.error('获取订单统计失败:', error)
+  }
+}
+
+// 加载用户评价数据
+const loadComments = async () => {
+  try {
+    const { data } = await fetchComment()
+    if (data.code === 200) {
+      comments.value = data.data.slice(0, 3) // 只显示前3条评论
+      
+      // 更新我的评价数量
+      stats.value[4].value = comments.value.length
+    }
+  } catch (error) {
+    console.error('获取评价数据失败:', error)
+  }
+}
 
 // 编辑资料
 const editProfile = () => {
   console.log('编辑资料')
 }
 
+// 退出登录
+const logout = () => {
+  // 清除登录状态
+  loginStore.logout()
+  
+  // 跳转到登录页面
+  router.push('/login')
+}
+
+// 跳转到订单页面并筛选对应状态
+const goToOrder = (status) => {
+  if (status === 'comment') {
+    // 跳转到评价页面
+    router.push('/comment')
+  } else if (status) {
+    router.push(`/order?status=${status}`)
+  } else {
+    router.push('/order')
+  }
+}
+
+// 格式化日期
+const formatDate = (dateString) => {
+  const date = new Date(dateString);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
 
 const setActiveFooterItem = (itemId) => {
   activeFooterItem.value = itemId
@@ -216,6 +298,7 @@ const setActiveFooterItem = (itemId) => {
 .stat-item {
   flex: 1;
   text-align: center;
+  cursor: pointer;
 }
 
 .stat-value {
@@ -229,6 +312,68 @@ const setActiveFooterItem = (itemId) => {
   margin: 0;
   font-size: 12px;
   color: #666;
+}
+
+/* 我的评价 */
+.section-header {
+  padding: 10px 15px;
+  background-color: #fff;
+}
+
+.section-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: bold;
+  color: #333;
+}
+
+.comments-list {
+  background-color: #fff;
+  padding: 0 15px 10px;
+}
+
+.comment-item {
+  padding: 10px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.comment-item:last-child {
+  border-bottom: none;
+}
+
+.comment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.comment-performance {
+  font-size: 14px;
+  font-weight: bold;
+  color: #333;
+}
+
+.comment-rating {
+  display: flex;
+  align-items: center;
+}
+
+.comment-content {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 5px;
+  line-height: 1.4;
+}
+
+.comment-date {
+  font-size: 12px;
+  color: #999;
+}
+
+.no-comments {
+  background-color: #fff;
+  padding: 20px 0;
 }
 
 /* 菜单区域 */
@@ -283,4 +428,5 @@ const setActiveFooterItem = (itemId) => {
   font-size: 18px;
   margin-bottom: 4px;
 }
+
 </style>

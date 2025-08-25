@@ -40,23 +40,6 @@
       </div>
     </div>
 
-    <!-- 未登录状态下的"点击我"页面 -->
-    <div class="unauthorized-page" v-if="showUnauthorized">
-      <div class="unauthorized-content">
-        <div class="unauthorized-icon">
-          <van-icon name="warning-o" size="60" color="#ee0a24" />
-        </div>
-        <h2 class="unauthorized-title">请登录</h2>
-        <p class="unauthorized-desc">您需要登录后才能访问此页面</p>
-        <van-button round type="primary" @click="goToLogin" class="auth-button">
-          前往登录
-        </van-button>
-
-        <div class="back-link" @click="hideUnauthorizedPage">
-          &lt; 返回
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -84,8 +67,6 @@ const user = ref({
 // 路由
 const router = useRouter()
 
-// 是否显示未授权页面
-const showUnauthorized = ref(false)
 
 // 刷新验证码
 const refreshCaptcha = async () => {
@@ -96,25 +77,13 @@ const refreshCaptcha = async () => {
   }
 }
 
-// 显示未授权页面
-const showUnauthorizedPage = () => {
-  showUnauthorized.value = true
-}
-
-// 隐藏未授权页面
-const hideUnauthorizedPage = () => {
-  showUnauthorized.value = false
-}
 
 // 回退上一页
 const goBack = () => {
   router.go(-1)
 }
 
-// 前往登录页
-const goToLogin = () => {
-  showUnauthorized.value = false
-}
+
 
 // 提交表单
 const onSubmit = async (user) => {
@@ -144,8 +113,7 @@ onMounted(() => {
   // 可以在这里添加是否显示未授权页面的逻辑
   // 例如从路由参数中获取
   refreshCaptcha()
-  const needAuth = router.currentRoute.value.query.needAuth === 'true'
-  showUnauthorized.value = needAuth
+ 
 })
 </script>
 

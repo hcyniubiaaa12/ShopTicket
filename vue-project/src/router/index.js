@@ -5,6 +5,7 @@ import OrderView from '../views/OrderView.vue'
 import ProfileView from '../views/ProfileView.vue'
 import EventDetailView from '../views/EventDetailView.vue'
 import LoginPage from '../views/LoginPage.vue'
+import CommentView from '../views/CommentView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -28,6 +29,11 @@ const router = createRouter({
       path: '/profile',
       name: 'profile',
       component: ProfileView,
+    },
+    {
+      path: '/comment',
+      name: 'comment',
+      component: CommentView,
     },
     {
       path: '/event/:id',
