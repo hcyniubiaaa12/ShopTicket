@@ -19,10 +19,8 @@
       <div class="event-info">
         <h1 class="event-title">{{ eventData.title + '-' + eventData.city+ '站'}}</h1>
         <div class="event-meta">
-          
           <p class="event-location">
             <van-icon name="location-o" />
-
             {{ eventData.venue }}
           </p>
           <p class="event-price">
@@ -122,9 +120,11 @@
         </div>
 
         <!-- 票数选择 -->
+        <!-- 票数选择 -->
         <div class="ticket-section" v-if="visible">
           <h3>票数</h3>
           <div class="quantity-selector">
+            <span class="quantity-limit">每场演唱会限购4张</span>
             <span class="quantity-limit">每场演唱会限购4张</span>
             <div class="quantity-control">
               <button class="quantity-btn" @click="decreaseQuantity" :disabled="selectedQuantity <= 1">-</button>
@@ -138,8 +138,55 @@
         <div class="modal-footer">
           <button :disabled="!selectedDate || !selectedPrice"
             :class="['buy-button', { disabled: !selectedDate || !selectedPrice }]" @click="createOrderDirectly">
+            :class="['buy-button', { disabled: !selectedDate || !selectedPrice }]" @click="createOrderDirectly">
             确认购票
           </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 支付确认弹窗 -->
+    <div v-if="showPaymentConfirm" class="payment-confirm-modal">
+      <div class="payment-content">
+        <!-- 图标 -->
+        <div class="payment-icon">
+          <van-icon name="bill-o" size="40" color="#FF69B4" />
+        </div>
+
+        <!-- 标题与描述 -->
+        <h3 class="payment-title">确认支付</h3>
+        <p class="payment-desc">
+          您即将为以下订单完成支付，请确认信息无误。
+        </p>
+
+        <!-- 订单信息 -->
+        <div class="order-summary">
+          <div class="summary-row">
+            <span>演出名称</span>
+            <span class="value">{{ eventData.title }}</span>
+          </div>
+          <div class="summary-row">
+            <span>场次时间</span>
+            <span class="value">{{ formatDate(selectedDate) }}</span>
+          </div>
+          <div class="summary-row">
+            <span>票价类型</span>
+            <span class="value">{{ selectedPrice?.name }}</span>
+          </div>
+          <div class="summary-row">
+            <span>票数</span>
+            <span class="value">{{ selectedQuantity }} 张</span>
+          </div>
+          <div class="summary-total">
+            <strong>合计金额</strong>
+            <strong class="amount">¥{{ (selectedPrice?.price * selectedQuantity).toFixed(2) }}</strong>
+          </div>
+        </div>
+
+        <!-- 操作按钮 -->
+        <div class="payment-actions">
+          <button class="btn-cancel" @click="cancelPayment">取消</button>
+          <button class="btn-confirm" @click="confirmPayment">确认支付</button>
         </div>
       </div>
     </div>
@@ -231,15 +278,16 @@ const showPaymentConfirm = ref(false)
 const selectedDate = ref('')
 const selectedPrice = ref(null)
 const selectedQuantity = ref(1)
+
 const dateObject = ref([])
 
 // 场次和票价数据
 const timeList = ref([])
 const ticketList = ref([])
 const visible = ref(false)
+const createdOrderId = ref(null) // 保存创建的订单ID
 
-// 创建的订单ID
-const createdOrderId = ref(null)
+
 
 // 城市巡演站数据（实际应从接口获取，这里模拟）
 const tourStations = ref([])
@@ -306,12 +354,15 @@ const buyTicket = async () => {
   }
 }
 
+
 // 关闭购票弹窗
 const closeTicketModal = () => {
   showTicketModal.value = false
   showPaymentConfirm.value = false
+  showPaymentConfirm.value = false
 }
 
+// 选择场次
 // 选择场次
 const selectDate = async (date) => {
   dateObject.value = date
@@ -336,15 +387,18 @@ const selectPrice = (price) => {
 }
 
 // 修改票数
+// 修改票数
 const increaseQuantity = () => {
   if (selectedQuantity.value < 4) selectedQuantity.value++
 }
 const decreaseQuantity = () => {
   if (selectedQuantity.value > 1) selectedQuantity.value--
+  if (selectedQuantity.value > 1) selectedQuantity.value--
 }
 
-// 格式化日期显示
+// 格式化日期
 const formatDate = (dateStr) => {
+  if (!dateStr) return ''
   if (!dateStr) return ''
   const date = new Date(dateStr)
   return `${date.getMonth() + 1}月${date.getDate()}日`
@@ -446,6 +500,7 @@ const cancelPayment = () => {
   z-index: 100;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
+
 
 .header-left,
 .header-right {
@@ -1029,5 +1084,149 @@ const cancelPayment = () => {
 .buy-button.disabled {
   background-color: #ccc;
   cursor: not-allowed;
+}
+
+/* ===== 支付确认弹窗样式 ===== */
+.payment-confirm-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.4);
+  z-index: 1100;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.payment-content {
+  width: 90%;
+  max-width: 380px;
+  background: #fff;
+  border-radius: 20px;
+  padding: 25px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  animation: scaleIn 0.3s ease-out;
+}
+
+.payment-icon {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  width: 60px;
+  height: 60px;
+  background: #fff0f5;
+  border-radius: 50%;
+  margin-bottom: 16px;
+}
+
+.payment-title {
+  margin: 0 0 8px 0;
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+}
+
+.payment-desc {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+.order-summary {
+  background-color: #f9f9fb;
+  border-radius: 12px;
+  padding: 16px;
+  font-size: 14px;
+  color: #555;
+  text-align: left;
+  margin-bottom: 24px;
+  border: 1px solid #eee;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.summary-row .value {
+  font-weight: 500;
+  color: #333;
+}
+
+.summary-total {
+  font-size: 16px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed #ddd;
+  display: flex;
+  justify-content: space-between;
+  color: #e60000;
+  font-weight: bold;
+}
+
+.payment-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-cancel {
+  flex: 1;
+  padding: 12px;
+  background-color: #f0f0f0;
+  color: #666;
+  border: none;
+  border-radius: 16px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-cancel:hover {
+  background-color: #e0e0e0;
+}
+
+.btn-confirm {
+  flex: 1;
+  padding: 12px;
+  background-color: #FF69B4;
+  color: white;
+  border: none;
+  border-radius: 16px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-confirm:hover {
+  background-color: #e94e9c;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 </style>
