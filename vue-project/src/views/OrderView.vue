@@ -29,7 +29,7 @@
             <img :src="order.url" alt="活动封面" />
           </div>
           <div class="event-info">
-            <h3 class="event-title">{{ order.title }} - {{ order.city }}+'站'</h3>
+            <h3 class="event-title">{{ order.title +'-'+ order.city +'站'}}</h3>
             <p class="event-time">
               <van-icon name="clock-o" /> {{ formatDate(order.startTime) }}
             </p>

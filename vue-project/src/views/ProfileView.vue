@@ -184,12 +184,29 @@ const loadComments = async () => {
     console.error('获取评价数据失败:', error)
   }
 }
+const logout = () => {
+  loginStore.logout()
+  router.push('/login')
+}
 
 // 编辑资料
 const editProfile = () => {
   console.log('编辑资料')
 }
 
+const goToOrder = (status) => {
+  // 如果是评价相关的跳转到评价页面
+  if (status === 'comment') {
+    router.push('/comment')
+    return
+  }
+  
+  // 其他状态跳转到订单页面，并传递状态参数
+  router.push({
+    path: '/order',
+    query: { status }
+  })
+}
 
 const setActiveFooterItem = (itemId) => {
   activeFooterItem.value = itemId
