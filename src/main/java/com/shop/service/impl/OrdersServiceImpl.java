@@ -6,11 +6,15 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.shop.dto.OrderDto;
 import com.shop.entity.Orders;
 import com.shop.entity.Ticket;
+import com.shop.entity.UserTicket;
 import com.shop.enums.OrderStatus;
+import com.shop.enums.TicketStatus;
 import com.shop.result.Result;
 import com.shop.service.OrdersService;
 import com.shop.mapper.OrdersMapper;
 import com.shop.service.TicketService;
+import com.shop.service.UserService;
+import com.shop.service.UserTicketService;
 import com.shop.userhold.UserHold;
 import com.shop.utils.GenerateId;
 import jakarta.annotation.PostConstruct;
@@ -25,6 +29,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -48,6 +53,8 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders>
     private RedissonClient redissonClient;
     @Autowired
     private OrdersMapper ordersMapper;
+    @Autowired
+    private UserTicketService userTicketService;
 
     private static final DefaultRedisScript<Long> redisScript = new DefaultRedisScript<>();
     private static final BlockingDeque<Orders> ORDERS_QUEUE = new LinkedBlockingDeque<>(1024);
@@ -200,6 +207,15 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders>
             ticketUpdateWrapper.setSql("stock = stock - " + orders.getNum());
             ticketUpdateWrapper.ge("stock", orders.getNum());
             ticketService.update(ticketUpdateWrapper);
+            ArrayList<UserTicket> userTickets = new ArrayList<>(orders.getNum());
+            for (int i = 0; i < orders.getNum(); i++) {
+                UserTicket userTicket = new UserTicket();
+                userTicket.setUserId(orders.getUserId());
+                userTicket.setTicketId(orders.getTicketId());
+                userTicket.setStatus(TicketStatus.UNUSED);
+                userTickets.add(userTicket);
+            }
+             userTicketService.saveBatch(userTickets, 100);
 
 
         } catch (InterruptedException e) {

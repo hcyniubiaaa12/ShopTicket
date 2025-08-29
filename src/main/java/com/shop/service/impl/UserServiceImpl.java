@@ -12,7 +12,7 @@ import com.shop.vo.CaptchaVo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
-
+import java.io.*;
 import java.util.HashMap;
 import java.util.Random;
 import java.util.UUID;
@@ -87,6 +87,54 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
 
         return Result.success(token);
+    }
+
+    public void generateTestTokens(int count) {
+        // 准备 CSV 文件路径（项目根目录下）
+        String filePath = "test_tokens.csv";
+        try (PrintWriter writer = new PrintWriter(new FileWriter(filePath))) {
+            // 写 CSV 头
+            writer.println("token,account,name,user_id");
+
+            for (int i = 0; i < count; i++) {
+                String account = "1380000" + String.format("%03d", i);
+
+                QueryWrapper<User> wrapper = new QueryWrapper<>();
+                wrapper.eq("account", account);
+                User user = this.getOne(wrapper);
+
+                if (user == null) {
+                    user = new User();
+                    user.setAccount(account);
+                    user.setName(generateRandomName());
+                    this.save(user);
+                }
+
+                String token = UUID.randomUUID().toString();
+                HashMap<String, Object> map = new HashMap<>();
+                map.put("id", user.getId().toString());
+                map.put("account", user.getAccount());
+                map.put("name", user.getName());
+                map.put("url", user.getUrl());
+
+                redisTemplate.opsForHash().putAll("user:" + token, map);
+                redisTemplate.expire("user:" + token, 30, TimeUnit.MINUTES);
+
+                // 写入 CSV：每行一个 token 和用户信息
+                writer.printf("%s,%s,%s,%s%n",
+                        token,
+                        user.getAccount(),
+                        user.getName(),
+                        user.getId()
+                );
+
+                System.out.println("✅ Generated token for user " + account + ": " + token);
+            }
+            System.out.println("🎉 Successfully generated " + count + " tokens.");
+            System.out.println("📄 Token file saved at: " + new java.io.File(filePath).getAbsolutePath());
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to write token file", e);
+        }
     }
 }
 

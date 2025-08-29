@@ -1,9 +1,13 @@
 package com.shop;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.shop.controller.CaptchaController;
 import com.shop.controller.UploadController;
+import com.shop.entity.User;
 import com.shop.result.Result;
 import com.shop.service.PerformancesService;
+import com.shop.service.UserService;
+import com.shop.service.impl.UserServiceImpl;
 import com.shop.utils.GenerateId;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +18,12 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+
+import static com.shop.service.impl.UserServiceImpl.generateRandomName;
 
 @SpringBootTest
 class ShopApplicationTests {
@@ -22,9 +32,10 @@ class ShopApplicationTests {
     @Autowired
     private UploadController uploadController;
     @Autowired
-    private CaptchaController captchaController;
+    private UserServiceImpl userService;
    @Autowired
    private StringRedisTemplate stringRedisTemplate;
+
 
     @Test
     void contextLoads() throws IOException {
@@ -57,13 +68,28 @@ class ShopApplicationTests {
 //          stringRedisTemplate.opsForValue().set("stock:ticket:"+i,"10000");
 //
 //        }
-        stringRedisTemplate.opsForValue().set("stock:ticket:"+28,"10000");
+        stringRedisTemplate.opsForValue().set("stock:ticket:"+43,"10000");
+        stringRedisTemplate.opsForValue().set("stock:ticket:"+44,"10000");
+        stringRedisTemplate.opsForValue().set("stock:ticket:"+45,"10000");
 
 
 
 
 
     }
+
+    @Test
+    void test3() {
+        userService.generateTestTokens(1000);
+
+    }
+
+    @Test
+    void test4() {
+        LocalDateTime now = LocalDateTime.now();
+        System.out.println( now);
+    }
+
 
 
 }

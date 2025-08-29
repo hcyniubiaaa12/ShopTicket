@@ -9,10 +9,13 @@ spring:
       host: 192.168.1.9
       port: 6379
       database: 2
+      timeout: 2000
+
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: Asia/Shanghai
 mybatis-plus:
+  executor-type: batch
   global-config:
     db-config:
       logic-delete-field: isDeleted # ?????????
@@ -40,3 +43,4 @@ minio:
   access-key: admin
   secret-key: 12345678
   bucket-name: bucket-name
+
