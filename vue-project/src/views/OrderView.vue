@@ -142,7 +142,8 @@ const selectedOrder = ref(null)
 // 底部导航
 const footerItems = ref([
   { id: 'home', name: '首页', icon: '🏠' },
-  { id: 'ticket', name: '想看', icon: '❤️' },
+  { id: 'ticket', name: '演出', icon: '❤️' },
+  { id: 'userticket', name: '票夹', icon: '🎟️' },
   { id: 'order', name: '订单', icon: '📋' },
   { id: 'profile', name: '我的', icon: '👤' }
 ])
@@ -151,7 +152,6 @@ const footerItems = ref([
 const tabs = ref([
   { name: '全部' },
   { name: '待支付' },
-  { name: '待观看' },
   { name: '已支付' },
   { name: '已取消' }
 ])
@@ -273,10 +273,21 @@ const formatDate = (time) => {
 const setActiveFooterItem = (itemId) => {
   activeFooterItem.value = itemId
   switch (itemId) {
-    case 'home': router.push('/'); break
-    case 'ticket': router.push('/ticket'); break
-    case 'order': router.push('/order'); break
-    case 'profile': router.push('/profile'); break
+    case 'home':
+      router.push('/')
+      break
+    case 'ticket':
+      router.push('/ticket')
+      break
+    case 'userticket':
+      router.push('/userticket')
+      break
+    case 'order':
+      router.push('/order')
+      break
+    case 'profile':
+      router.push('/profile')
+      break
   }
 }
 
@@ -290,7 +301,7 @@ const emptyDescription = computed(() => {
   const map = {
     all: '暂无订单记录',
     pending: '暂无待支付订单',
-    paid: '暂无待观看订单',
+    paid: '暂无已支付订单',
     completed: '暂无已完成订单',
     cancelled: '暂无已取消订单'
   }
@@ -442,11 +453,6 @@ const emptyDescription = computed(() => {
 .order-status.paid {
   background-color: #e8f5ff;
   color: #3399ff;
-}
-
-.order-status.completed {
-  background-color: #e8fff0;
-  color: #00cc66;
 }
 
 .order-status.cancelled {

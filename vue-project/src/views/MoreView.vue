@@ -15,13 +15,16 @@
           <img :src="event.url" />
         </div>
         <div class="event-info">
-          <h3 class="event-title">{{ event.title + '-' + event.cityName + '站' }}</h3>
-          <p class="event-time">
-            {{
-              event.totalPerformances > 1 ? event.firstShow + ' - ' + event.lastShow : event.firstShow
-            }}
-          </p>
-          <p class="event-location">{{ event.venueName }}</p>
+          <h3 class="event-title">{{ event.title + '-' + event.city + '站' }}</h3>
+          <p class="event-arist">{{ event.artist }}</p>
+         <p class="event-time" v-if="event.firstShow != event.lastShow">
+              {{
+                event.firstShow + ' - ' + event.lastShow
+              }}
+
+            </p>
+            <p class="event-time" v-else>{{ event.firstShow }}</p>
+          <p class="event-location">{{ event.venue }}</p>
           <p class="event-price">¥{{ event.minPrice || '待定' }} 起</p>
         </div>
       </div>
@@ -183,6 +186,11 @@ onMounted(() => {
   padding: 8px;
   display: flex;
   flex-direction: column;
+}
+.event-arist {
+  margin: 4px 0;
+  font-size: 12px;
+  color: orange
 }
 
 .event-title {

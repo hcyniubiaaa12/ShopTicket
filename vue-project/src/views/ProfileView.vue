@@ -3,12 +3,12 @@
     <!-- 用户信息 -->
     <div class="user-header">
       <div class="user-avatar">
-        <img :src=loginStore.avatar >
-      
+        <img :src=loginStore.avatar>
+
       </div>
-      <div class="user-info" >
+      <div class="user-info">
         <h3 class="user-name">用户:{{ loginStore.username }}</h3>
-       
+
       </div>
       <div class="user-actions">
         <van-button size="small" @click="editProfile">编辑资料</van-button>
@@ -27,7 +27,7 @@
     <!-- 功能菜单 -->
     <div class="menu-section">
       <van-cell-group>
-        <van-cell title="我的想看" is-link to="/ticket">
+        <van-cell title="我的演出" is-link to="/ticket">
           <template #right-icon>
             <van-icon name="arrow" />
           </template>
@@ -112,7 +112,8 @@ const activeFooterItem = ref('profile')
 // 底部导航项
 const footerItems = ref([
   { id: 'home', name: '首页', icon: '🏠' },
-  { id: 'ticket', name: '想看', icon: '❤️' },
+  { id: 'ticket', name: '演出', icon: '❤️' },
+  { id: 'userticket', name: '票夹', icon: '🎟️' },
   { id: 'order', name: '订单', icon: '📋' },
   { id: 'profile', name: '我的', icon: '👤' }
 ])
@@ -120,7 +121,6 @@ const footerItems = ref([
 // 用户统计数据
 const stats = ref([
   { value: 0, label: '待支付', status: '待支付' },
-  { value: 0, label: '待观看', status: '待观看' },
   { value: 0, label: '已完成', status: '已支付' },
   { value: 0, label: '已取消', status: '已取消' },
   { value: 0, label: '我的评价', status: 'comment' }
@@ -150,20 +150,18 @@ const loadOrderStats = async () => {
     const { data } = await fetchOrder()
     if (data.code === 200) {
       const orders = data.data
-      
+
       // 统计各类订单数量
       const pendingCount = orders.filter(order => order.status === '待支付').length
-      const watchingCount = orders.filter(order => order.status === '待观看').length
       const completedCount = orders.filter(order => order.status === '已支付').length
       const cancelledCount = orders.filter(order => order.status === '已取消').length
-      
+
       stats.value[0].value = pendingCount
-      stats.value[1].value = watchingCount
-      stats.value[2].value = completedCount
-      stats.value[3].value = cancelledCount
-      
+      stats.value[1].value = completedCount
+      stats.value[2].value = cancelledCount
+
       // 更新我的评价数量
-      stats.value[4].value = comments.value.length
+      stats.value[3].value = comments.value.length
     }
   } catch (error) {
     console.error('获取订单统计失败:', error)
@@ -176,7 +174,7 @@ const loadComments = async () => {
     const { data } = await fetchComment()
     if (data.code === 200) {
       comments.value = data.data.slice(0, 3) // 只显示前3条评论
-      
+
       // 更新我的评价数量
       stats.value[4].value = comments.value.length
     }
@@ -200,7 +198,7 @@ const goToOrder = (status) => {
     router.push('/comment')
     return
   }
-  
+
   // 其他状态跳转到订单页面，并传递状态参数
   router.push({
     path: '/order',
@@ -219,6 +217,9 @@ const setActiveFooterItem = (itemId) => {
       break
     case 'order':
       router.push('/order')
+      break
+    case 'userticket':
+      router.push('/userticket')
       break
     case 'profile':
       if (!loginStore.isLogin) {

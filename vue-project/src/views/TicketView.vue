@@ -67,7 +67,8 @@ const events = ref([])
 // 底部导航项
 const footerItems = ref([
   { id: 'home', name: '首页', icon: '🏠' },
-  { id: 'ticket', name: '想看', icon: '❤️' },
+  { id: 'ticket', name: '演出', icon: '❤️' },
+  { id: 'userticket', name: '票夹', icon: '🎟️' },
   { id: 'order', name: '订单', icon: '📋' },
   { id: 'profile', name: '我的', icon: '👤' }
 ])
@@ -131,6 +132,9 @@ const setActiveFooterItem = (itemId) => {
       break
     case 'ticket':
       router.push('/ticket')
+      break
+    case 'userticket':
+      router.push('/userticket')
       break
     case 'order':
       router.push('/order')
