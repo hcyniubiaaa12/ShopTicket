@@ -10,9 +10,8 @@ export const useLoginStore = defineStore('login', {
     }),
     actions: {
 
-        // ✅ 使用普通函数（不能用箭头函数！）
+       
         setUser(user) {
-            console.log('setUser 被调用，user:', user) // 会打印
             this.username = user.name
             this.userId = user.id
             this.avatar = user.url

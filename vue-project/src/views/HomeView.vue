@@ -57,7 +57,7 @@
       </div>
       <div class="events-list">
         <div class="event-card" v-for="(event, index) in hotEvents" :key="index"
-          @click="goToEventDetail(event.eventId,event.cityId)">
+          @click="goToEventDetail(event.eventId, event.cityId)">
           <div class="event-image">
             <img :src="event.url">
             <div class="event-tag" v-if="event.tag">{{ event.tag }}</div>
@@ -99,8 +99,8 @@ import { useRouter } from 'vue-router'
 import { fetchAllType } from '../../public/util/type/fetchAllType'
 import { fetchAllPerformance } from '../../public/util/performance/fetchPerformance'
 import { fetchCity } from '../../public/util/city/fetchCity'
-
-
+import { useLoginStore } from '@/stores/login'
+const loginStore = useLoginStore()
 const router = useRouter()
 const activeFooterItem = ref('home')
 
@@ -151,7 +151,7 @@ onMounted(async () => {
     }
     if (res.data.code === 200) {
       hotEvents.value = res.data.data.slice(0, 5); // 取前5条热门演出
-   
+
 
 
 
@@ -201,7 +201,7 @@ const goToCategory = (categoryId) => {
   router.push(`/ticket?category=${categoryId}`)
 }
 
-const goToEventDetail = (eventId,cityId) => {
+const goToEventDetail = (eventId, cityId) => {
   console.log('查看演出详情:', eventId)
 
   router.push({
@@ -227,7 +227,11 @@ const setActiveFooterItem = (itemId) => {
       router.push('/order')
       break
     case 'profile':
-      router.push('/profile')
+      if (!loginStore.isLogin) {
+        router.push('/login')
+      } else {
+        router.push('/profile')
+      }
       break
   }
 }

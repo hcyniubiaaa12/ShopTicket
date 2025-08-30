@@ -51,10 +51,10 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { fetchAllType } from '../../public/util/type/fetchAllType'
 import { fetchPerformanceById } from '../../public/util/performance/fetchPerformance'
-
+import { useLoginStore } from '@/stores/login'
 const route = useRoute()
 const router = useRouter()
-
+const loginStore = useLoginStore()
 const activeFooterItem = ref('ticket')
 const categories = ref([])
 
@@ -140,7 +140,11 @@ const setActiveFooterItem = (itemId) => {
       router.push('/order')
       break
     case 'profile':
-      router.push('/profile')
+      if (!loginStore.isLogin) {
+        router.push('/login')
+      } else {
+        router.push('/profile')
+      }
       break
   }
 }

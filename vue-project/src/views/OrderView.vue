@@ -29,7 +29,7 @@
             <img :src="order.url" alt="活动封面" />
           </div>
           <div class="event-info">
-            <h3 class="event-title">{{ order.title +'-'+ order.city +'站'}}</h3>
+            <h3 class="event-title">{{ order.title + '-' + order.city + '站' }}</h3>
             <p class="event-time">
               <van-icon name="clock-o" /> {{ formatDate(order.startTime) }}
             </p>
@@ -169,7 +169,7 @@ onMounted(async () => {
     if (data.code === 200) {
       orders.value = data.data
       console.log(orders.value);
-      
+
       // 检查是否有从用户主页传入的状态参数
       const status = router.currentRoute.value.query.status
       if (status) {
@@ -190,6 +190,8 @@ const filteredOrders = computed(() => {
 // 切换标签
 const setActiveTab = (tabName) => {
   activeTab.value = tabName
+  // 更新URL查询参数，以便刷新后能保持状态
+  router.push(`/order?status=${tabName}`)
 }
 
 // 查看订单详情
@@ -198,13 +200,15 @@ const viewOrderDetail = (orderId) => {
 }
 
 // 取消订单
-const cancel = async(orderId) => {
-  let {data} = await cancelOrder(orderId);
-  if(data.code ===200){
-   let res = await fetchOrder();
-   if(res.data.code ===200){
-     orders.value = res.data.data
-   }
+const cancel = async (orderId) => {
+  let { data } = await cancelOrder(orderId);
+  if (data.code === 200) {
+    let res = await fetchOrder();
+    if (res.data.code === 200) {
+      orders.value = res.data.data
+      // 取消成功后切换到"已取消"标签页
+      setActiveTab('已取消')
+    }
     alert('取消成功')
   }
   console.log('取消订单:', orderId)
@@ -227,7 +231,7 @@ const confirmPayment = async () => {
     console.log('支付订单:', selectedOrder.value.id)
     showPaymentConfirm.value = false
     selectedOrder.value = null
-    
+
     // 重新加载订单数据以更新状态
     try {
       const { data } = await fetchOrder()
@@ -243,6 +247,7 @@ const confirmPayment = async () => {
 // 取消支付
 const cancelPayment = () => {
   showPaymentConfirm.value = false
+  router.push(`/order?status=已取消&id=${selectedOrder.value.id}`)
   selectedOrder.value = null
 }
 
@@ -286,7 +291,11 @@ const setActiveFooterItem = (itemId) => {
       router.push('/order')
       break
     case 'profile':
-      router.push('/profile')
+      if (!loginStore.isLogin) {
+        router.push('/login')
+      } else {
+        router.push('/profile')
+      }
       break
   }
 }

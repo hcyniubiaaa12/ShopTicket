@@ -27,7 +27,7 @@
     <!-- 功能菜单 -->
     <div class="menu-section">
       <van-cell-group>
-        <van-cell title="我的演出" is-link to="/ticket">
+        <van-cell title="我的演出" is-link to="/myperformances">
           <template #right-icon>
             <van-icon name="arrow" />
           </template>
@@ -404,17 +404,23 @@ const setActiveFooterItem = (itemId) => {
   flex: 1;
   text-align: center;
   padding: 8px 0;
-  cursor: pointer;
   font-size: 12px;
+  cursor: pointer;
   color: #666;
+  transition: all 0.3s;
+}
+
+.footer-item:hover {
+  color: #ff6a00;
 }
 
 .footer-item.active {
   color: #ff6a00;
+  font-weight: bold;
 }
 
 .footer-item .icon {
   font-size: 18px;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 </style>

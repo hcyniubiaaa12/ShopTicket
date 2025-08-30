@@ -15,7 +15,7 @@
             <h2 class="event-title">{{ ticket.title + '-' + ticket.city + '站' }}</h2>
             <p class="event-time"> <van-icon name="clock-o" /> {{ formatDate(ticket.startTime) }}</p>
             <p class="event-venue"> <van-icon name="location-o" /> {{ ticket.venue }}</p>
-            <p class="event-ticketType">  {{ ticket.ticketType }}</p>
+            <p class="event-ticketType"> {{ ticket.ticketType }}</p>
           </div>
         </div>
 
@@ -33,19 +33,18 @@
             <span class="label">观演人:</span>
             <span class="value">{{ ticket.username }}</span>
           </div>
-           <div class="ticket-row">
+          <div class="ticket-row">
             <span class="label">订单创建时间:</span>
             <span class="value">{{ formatDate(ticket.createTime) }}</span>
           </div>
-        
+
         </div>
 
         <div class="ticket-footer">
           <div class="status" :class="ticket.statusClass">{{ ticket.status }}</div>
           <div class="actions">
-            <button class="action-btn" @click="use(ticket)"  v-if="ticket.status === '待观看'">去使用</button>
-            <button class="action-btn primary" v-if="ticket.status === '已观看'"
-              @click="comment(ticket)">去评论</button>
+            <button class="action-btn" @click="use(ticket)" v-if="ticket.status === '待观看'">去使用</button>
+          
           </div>
         </div>
       </div>
@@ -74,11 +73,12 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import {useTicket} from '../../public/util/userticket/useTicket'
+import { useTicket } from '../../public/util/userticket/useTicket'
 import { fetchUserTicket } from '../../public/util/userticket/fetchUserTicket'
+import { useLoginStore } from '@/stores/login'
 
 import { showNotify } from 'vant'
-;
+const loginStore = useLoginStore()
 const router = useRouter()
 
 // 模拟票务数据
@@ -99,7 +99,7 @@ onMounted(async () => {
   if (data.code === 200) {
     tickets.value = data.data
 
-    
+
 
   }
 
@@ -122,36 +122,34 @@ const setActiveFooterItem = (itemId) => {
       router.push('/order')
       break
     case 'profile':
-      router.push('/profile')
+      if (!loginStore.isLogin) {
+        router.push('/login')
+      } else {
+        router.push('/profile')
+      }
       break
   }
 }
 
 // 查看票务详情
-const use = async(ticket) => {
-   let {data} = await useTicket(ticket);
-   console.log(data);
-   
-  if(data.code === 200){
+const use = async (ticket) => {
+  let { data } = await useTicket(ticket);
+  console.log(data);
+
+  if (data.code === 200) {
     showNotify({ type: 'success', message: data.data })
     // 更新票券列表以反映状态变化
     let res = await fetchUserTicket()
     if (res.data.code === 200) {
       tickets.value = res.data.data
     }
-  }else{
+  } else {
     showNotify({ type: 'danger', message: data.data })
   }
   console.log('查看票务详情', ticket)
   // 实际项目中可以跳转到票务详情页
 }
 
-// 兑换票
-const comment = async (ticket) => {
- 
-  console.log( ticket)
-  // 实际项目中可以实现兑换逻辑
-}
 
 // 跳转到首页
 const goToHome = () => {

@@ -257,8 +257,7 @@ onMounted(async () => {
     const { data } = await fetchDetail(route.params.id, currentCityId.value)
     const cityData = await fetchCityByEventId(route.params.id)
     if (cityData.data.code === 200) {
-      tourStations.value = cityData.data.data
-    
+      tourStations.value = cityData.data.data 
     }
 
     if (data.code === 200 && data.data.length > 0) {
@@ -377,8 +376,6 @@ const selectStation = async (station) => {
 // 创建订单
 const createOrderDirectly = async () => {
   if (!selectedDate.value || !selectedPrice.value) return
-
-  try {
     const orderData = {
       userId: loginStore.userId,
       num: selectedQuantity.value,
@@ -392,37 +389,27 @@ const createOrderDirectly = async () => {
       createdOrderId.value = data.data
       showTicketModal.value = false // 关闭购票弹窗
       showPaymentConfirm.value = true // 显示支付确认弹窗
-    } else {
-      alert(data.message || '订单创建失败')
-    }
-  } catch (error) {
-    console.error('订单创建失败:', error)
-    alert('网络错误，请稍后重试')
-  }
+    } 
+  
 }
 
 // 确认支付
 const confirmPayment = async () => {
-  try {
+ 
     const { data } = await payOrder(createdOrderId.value)
     if (data.code === 200) {
       createdOrderId.value = null
       alert('购票成功！')
       closeTicketModal()
       router.push('/order')
-    } else {
-      alert('支付失败')
-    }
-  } catch (err) {
-    console.error('支付失败:', err)
-    alert('支付请求失败')
-  }
+    } 
+ 
 }
 
 // 取消支付
 const cancelPayment = () => {
   showPaymentConfirm.value = false
-  router.push(`/order?status=已取消&id=${createdOrderId.value}`)
+  router.push(`/order?status=待支付&id=${createdOrderId.value}`)
 }
 </script>
 

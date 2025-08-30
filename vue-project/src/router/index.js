@@ -5,8 +5,8 @@ import OrderView from '../views/OrderView.vue'
 import ProfileView from '../views/ProfileView.vue'
 import EventDetailView from '../views/EventDetailView.vue'
 import LoginPage from '../views/LoginPage.vue'
-import CommentView from '../views/CommentView.vue'
 import UserTicketView from '../views/UserTicketView.vue'
+import MyPerformancesView from '../views/MyPerformancesView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -37,10 +37,11 @@ const router = createRouter({
       component: ProfileView,
     },
     {
-      path: '/comment',
-      name: 'comment',
-      component: CommentView,
+      path: '/myperformances',
+      name: 'myperformances',
+      component: MyPerformancesView,
     },
+    
     {
       path: '/event/:id',
       name: 'eventDetail',
