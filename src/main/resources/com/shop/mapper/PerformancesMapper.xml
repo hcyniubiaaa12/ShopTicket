@@ -10,7 +10,7 @@
             min_pr.min_price       AS min_price,
             e.id                   AS event_id,
             e.title,
-            i.url,                                  -- 注意：如果每场图不同，这里会出问题（后面说）
+            i.url,
             MIN(p.start_time)      AS first_show,
             MAX(p.start_time)      AS last_show,
             e.artist,
@@ -52,7 +52,7 @@
         SELECT min_pr.min_price  AS min_price,
                e.id              AS event_id,
                e.title,
-               i.url, -- 注意：如果每场图不同，这里会出问题（后面说）
+               i.url,
                MIN(p.start_time) AS first_show,
                MAX(p.start_time) AS last_show,
                e.artist,
@@ -149,6 +149,41 @@
         WHERE c.id = #{cityId}
           AND e.id = #{id}
         ORDER BY p.start_time;
+    </select>
+    <select id="getMyPerformance" resultType="com.shop.dto.PerformanceDto">
+        SELECT
+            e.title,
+            e.artist,
+            v.name AS venue,
+            c.name AS city,
+            i.url,
+            MIN(ut.create_time) AS first_purchase_time
+        FROM user_ticket ut
+                 JOIN orders o ON ut.ticket_id = o.ticket_id
+                 JOIN performances p ON p.id = o.performance_id
+                 JOIN EVENTS e ON e.id = p.event_id
+                 JOIN venues v ON p.venue_id = v.id
+                 JOIN city c ON v.city_id = c.id
+                 JOIN images i ON e.id = i.event_id AND i.is_deleted = 0
+        WHERE
+            o.status = 2
+          AND p.is_deleted = 0
+          AND c.is_deleted = 0
+          AND v.is_deleted = 0
+          AND i.is_deleted = 0
+          AND ut.is_deleted = 0
+          AND o.is_deleted = 0
+          AND ut.user_id = #{userId}
+        GROUP BY
+            e.title,
+            e.artist,
+            v.name,
+            c.name,
+            i.url
+        ORDER BY
+            first_purchase_time DESC;
+
+
     </select>
 
 </mapper>

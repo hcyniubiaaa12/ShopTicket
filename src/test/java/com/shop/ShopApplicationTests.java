@@ -39,7 +39,7 @@ class ShopApplicationTests {
 
     @Test
     void contextLoads() throws IOException {
-        ClassPathResource resource = new ClassPathResource("com/static/hcy.webp");
+        ClassPathResource resource = new ClassPathResource("com/static/xzd.webp");
 
         // 2. 读取文件内容
         byte[] bytes;
@@ -68,9 +68,10 @@ class ShopApplicationTests {
 //          stringRedisTemplate.opsForValue().set("stock:ticket:"+i,"10000");
 //
 //        }
-        stringRedisTemplate.opsForValue().set("stock:ticket:"+43,"10000");
-        stringRedisTemplate.opsForValue().set("stock:ticket:"+44,"10000");
-        stringRedisTemplate.opsForValue().set("stock:ticket:"+45,"10000");
+
+        stringRedisTemplate.opsForValue().set("stock:ticket:"+50,"10000");
+        stringRedisTemplate.opsForValue().set("stock:ticket:"+51,"10000");
+        stringRedisTemplate.opsForValue().set("stock:ticket:"+52,"10000");
 
 
 

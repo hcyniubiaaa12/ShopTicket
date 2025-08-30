@@ -21,4 +21,6 @@ public interface PerformancesService extends IService<Performances> {
     List<PerformanceDto> getPerformanceByEventId(Integer id,Integer cityId);
 
     List<TimeDto> getTimeByEventId(Integer id,Integer cityId);
+
+    List<PerformanceDto> getMyPerformance(Integer userId);
 }

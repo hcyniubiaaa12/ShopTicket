@@ -5,6 +5,7 @@ import com.shop.result.Result;
 import com.shop.service.PerformancesService;
 import com.shop.dto.PerformanceDto;
 import com.shop.dto.TimeDto;
+import com.shop.userhold.UserHold;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.bind.annotation.*;
@@ -73,6 +74,12 @@ public class PerformanceController {
 //        List<TimeDto> list = JSONUtil.toList(showTime, TimeDto.class);
 //        redisTemplate.opsForValue().set("time:" + id, JSONUtil.toJsonStr(list));
 
+        return Result.success(list);
+    }
+
+    @GetMapping("/getMyPerformance")
+    public Result<List<PerformanceDto>> getMyPerformance() {
+        List<PerformanceDto> list = performancesService.getMyPerformance( UserHold.getUser());
         return Result.success(list);
     }
 }

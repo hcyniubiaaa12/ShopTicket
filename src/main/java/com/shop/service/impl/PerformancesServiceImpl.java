@@ -41,6 +41,11 @@ public class PerformancesServiceImpl extends ServiceImpl<PerformancesMapper, Per
     public List<TimeDto> getTimeByEventId(Integer id,Integer cityId) {
         return performancesMapper.getTimeByEventId(id,cityId);
     }
+
+    @Override
+    public List<PerformanceDto> getMyPerformance(Integer userId) {
+        return performancesMapper.getMyPerformance(userId);
+    }
 }
 
 

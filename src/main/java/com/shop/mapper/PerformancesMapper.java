@@ -22,6 +22,8 @@ public interface PerformancesMapper extends BaseMapper<Performances> {
     List<PerformanceDto> getPerformanceByEventId(Integer id,Integer cityId);
 
     List<TimeDto> getTimeByEventId(Integer id,Integer cityId);
+
+    List<PerformanceDto> getMyPerformance(Integer userId);
 }
 
 
