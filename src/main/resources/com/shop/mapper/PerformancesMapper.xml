@@ -29,7 +29,7 @@
                  JOIN venues v ON p.venue_id = v.id
                  JOIN city c ON v.city_id = c.id
 
-                 JOIN images i ON e.id = i.event_id AND i.is_deleted = 0 -- 改为关联 event 的图，不是 performance
+                 JOIN images i ON e.id = i.event_id AND i.is_deleted = 0
 
         WHERE p.is_deleted = 0
           AND p.status = 0
@@ -74,7 +74,7 @@
                  JOIN city c ON v.city_id = c.id
                  JOIN event_type t ON e.type_id = t.id
 
-                 JOIN images i ON e.id = i.event_id AND i.is_deleted = 0 -- 改为关联 event 的图，不是 performance
+                 JOIN images i ON e.id = i.event_id AND i.is_deleted = 0
 
         WHERE p.is_deleted = 0
           AND p.status = 0
@@ -92,7 +92,7 @@
                  c.id
 
 
-        ORDER BY min_price
+        ORDER BY  MIN(p.start_time)
     </select>
     <select id="getPerformanceByEventId" resultType="com.shop.dto.PerformanceDto">
 
@@ -139,7 +139,7 @@
     </select>
 
     <select id="getTimeByEventId" resultType="com.shop.dto.TimeDto">
-        -- 查询苏州站有哪些演出时间
+
         SELECT DISTINCT p.id,
                         p.start_time time
         FROM performances p

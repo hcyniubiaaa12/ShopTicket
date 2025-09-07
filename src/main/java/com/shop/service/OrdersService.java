@@ -22,4 +22,6 @@ public interface OrdersService extends IService<Orders> {
     List<OrderDto> queryOrder(Integer userId);
 
     Result cancel(Long id);
+
+    void reduceStock(Orders take);
 }

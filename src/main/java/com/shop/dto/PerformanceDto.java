@@ -2,11 +2,9 @@ package com.shop.dto;
 
 import lombok.Data;
 
-import java.lang.ref.PhantomReference;
 import java.util.Date;
 
 @Data
-
 public class PerformanceDto {
 
     private Integer minPrice;

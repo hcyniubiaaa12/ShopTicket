@@ -39,7 +39,7 @@ class ShopApplicationTests {
 
     @Test
     void contextLoads() throws IOException {
-        ClassPathResource resource = new ClassPathResource("com/static/xzd.webp");
+        ClassPathResource resource = new ClassPathResource("com/static/teh.webp");
 
         // 2. 读取文件内容
         byte[] bytes;
@@ -64,24 +64,16 @@ class ShopApplicationTests {
     }
     @Test
     void test2(){
-//        for (int i = 29; i <43; i++) {
-//          stringRedisTemplate.opsForValue().set("stock:ticket:"+i,"10000");
-//
-//        }
+       for (int i = 1; i <=10000; i++) {
+           stringRedisTemplate.delete("order:pending:" + i);
 
-        stringRedisTemplate.opsForValue().set("stock:ticket:"+50,"10000");
-        stringRedisTemplate.opsForValue().set("stock:ticket:"+51,"10000");
-        stringRedisTemplate.opsForValue().set("stock:ticket:"+52,"10000");
-
-
-
-
+       }
 
     }
 
     @Test
     void test3() {
-        userService.generateTestTokens(1000);
+        userService.generateTestTokens(5000);
 
     }
 

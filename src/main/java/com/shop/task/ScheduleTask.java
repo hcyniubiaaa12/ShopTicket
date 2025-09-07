@@ -24,36 +24,31 @@ public class ScheduleTask {
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
 
-//    @Scheduled(cron = " * * * * ?")
-//    @Transactional
-//    public void checkPendingTask() {
+//   @Scheduled(cron = "*/2 * * * * *")
+//   @Transactional
+//   public void checkPendingTask() {
+//       String key  = "stock:ticket:";
+//       QueryWrapper<Orders> ordersQueryWrapper = new QueryWrapper<>();
+//       ordersQueryWrapper.select("create_time", "num", "ticket_id", "id", "user_id","performance_id")
+//               .eq("status", 1);
+//       List<Orders> list = ordersService.list(ordersQueryWrapper);
+//       for (Orders orders : list) {
+//           LocalDateTime createTime = orders.getCreateTime();
 //
-//        String key  = "stock:ticket:";
-//
-//
-//        QueryWrapper<Orders> ordersQueryWrapper = new QueryWrapper<>();
-//        ordersQueryWrapper.select("create_time", "num", "ticket_id", "id", "user_id","performance_id")
-//                .eq("status", 1);
-//        List<Orders> list = ordersService.list(ordersQueryWrapper);
-//        for (Orders orders : list) {
-//            LocalDateTime createTime = orders.getCreateTime();
-//            if (LocalDateTime.now().isAfter(createTime.plusMinutes(30))) {
-//                UpdateWrapper<Orders> ordersUpdateWrapper = new UpdateWrapper<>();
-//                ordersUpdateWrapper.eq("id", orders.getId())
-//                        .set("status", 3);
-//                ordersService.update(ordersUpdateWrapper);
-//                Ticket ticket = ticketService.getById(orders.getTicketId());
-//                ticket.setStock(ticket.getStock() + orders.getNum());
-//                ticketService.updateById(ticket);
-//                stringRedisTemplate.opsForValue().increment(key+orders.getTicketId().toString(), orders.getNum());
+//           if (LocalDateTime.now().isAfter(createTime.plusMinutes(3))) {
+//               UpdateWrapper<Orders> ordersUpdateWrapper = new UpdateWrapper<>();
+//               ordersUpdateWrapper.eq("id", orders.getId())
+//                       .set("status", 3);
+//               ordersService.update(ordersUpdateWrapper);
+//               Ticket ticket = ticketService.getById(orders.getTicketId());
+//               ticket.setStock(ticket.getStock() + orders.getNum());
+//               ticketService.updateById(ticket);
+//               stringRedisTemplate.opsForValue().increment(key+orders.getTicketId().toString(), orders.getNum());
 //
 //
-//            }
-//
-//        }
-//
-//
-//    }
+//           }
+//       }
+//   }
 
 
 

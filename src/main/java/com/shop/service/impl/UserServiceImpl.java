@@ -2,6 +2,7 @@ package com.shop.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.shop.dto.PerformanceDto;
 import com.shop.entity.User;
 import com.shop.exception.MyException;
 import com.shop.result.Result;
@@ -12,11 +13,11 @@ import com.shop.vo.CaptchaVo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+
 import java.io.*;
-import java.util.HashMap;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @author 陈增
@@ -27,9 +28,12 @@ import java.util.concurrent.TimeUnit;
 public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         implements UserService {
     private static final Random RANDOM = new Random();
+
     private static final String[] WORDS = {"小", "星", "雨", "梦", "雪", "风", "月", "花", "心", "阿"};
     @Autowired
     private StringRedisTemplate redisTemplate;
+    @Autowired
+    private UserMapper userMapper;
     private static final String MOBILE_REGEX = "^1[3-9]\\d{9}$";
 
     public static String generateRandomName() {
@@ -89,12 +93,57 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         return Result.success(token);
     }
 
+    @Override
+    public boolean like(Integer userId, Integer eventId, Integer cityId) {
+        boolean liked = true;
+        String key = "like:" + userId;
+        List<Integer> list = userMapper.like(eventId, cityId);
+        for (Integer id : list) {
+            if (Boolean.TRUE.equals(redisTemplate.opsForSet().isMember(key, id.toString()))) {
+                liked= false;
+                redisTemplate.opsForSet().remove(key, id.toString());
+            } else {
+                redisTemplate.opsForSet().add(key, id.toString());
+            }
+
+        }
+
+        return liked;
+    }
+
+    @Override
+    public boolean getIsLike(Integer userId,Integer eventId, Integer cityId) {
+        boolean liked = false;
+        String key = "like:" + userId;
+        List<Integer> list = userMapper.like(eventId, cityId);
+        for (Integer id : list) {
+            liked = Boolean.TRUE.equals(redisTemplate.opsForSet().isMember(key, id.toString()));
+        }
+
+
+        return liked;
+    }
+
+    @Override
+    public List<PerformanceDto> getUserLike(Integer userId) {
+        Set<String> members = redisTemplate.opsForSet().members("like:" + userId);
+        Long size = redisTemplate.opsForSet().size("like:" + userId);
+        List<Integer> performanceIds = new ArrayList<>(size.intValue());
+        if (members != null && !members.isEmpty()){
+            for (String member : members) {
+                performanceIds.add(Integer.parseInt(member));
+            }
+        }
+        return userMapper.getUserLike(performanceIds);
+
+    }
+
     public void generateTestTokens(int count) {
         // 准备 CSV 文件路径（项目根目录下）
         String filePath = "test_tokens.csv";
         try (PrintWriter writer = new PrintWriter(new FileWriter(filePath))) {
-            // 写 CSV 头
-            writer.println("token,account,name,user_id");
+            // ✅ 只保留 token 和 user_id
+            writer.println("token,user_id");
 
             for (int i = 0; i < count; i++) {
                 String account = "1380000" + String.format("%03d", i);
@@ -120,11 +169,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
                 redisTemplate.opsForHash().putAll("user:" + token, map);
                 redisTemplate.expire("user:" + token, 30, TimeUnit.MINUTES);
 
-                // 写入 CSV：每行一个 token 和用户信息
-                writer.printf("%s,%s,%s,%s%n",
+                // ✅ 只写入 token 和 user_id
+                writer.printf("%s,%s%n",
                         token,
-                        user.getAccount(),
-                        user.getName(),
                         user.getId()
                 );
 

@@ -10,16 +10,14 @@ import com.shop.entity.UserTicket;
 import com.shop.enums.OrderStatus;
 import com.shop.enums.TicketStatus;
 import com.shop.result.Result;
-import com.shop.service.OrdersService;
+import com.shop.service.*;
 import com.shop.mapper.OrdersMapper;
-import com.shop.service.TicketService;
-import com.shop.service.UserService;
-import com.shop.service.UserTicketService;
 import com.shop.userhold.UserHold;
 import com.shop.utils.GenerateId;
 import jakarta.annotation.PostConstruct;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
+import org.springframework.aop.framework.AopContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -44,6 +42,7 @@ import java.util.concurrent.*;
 public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders>
         implements OrdersService {
 
+   private  OrdersService proxy;
 
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
@@ -56,20 +55,25 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders>
     @Autowired
     private UserTicketService userTicketService;
 
+
+
     private static final DefaultRedisScript<Long> redisScript = new DefaultRedisScript<>();
-    private static final BlockingDeque<Orders> ORDERS_QUEUE = new LinkedBlockingDeque<>(1024);
-    private static final ExecutorService executorService = Executors.newSingleThreadExecutor();
+    private static final BlockingDeque<Orders> ORDERS_QUEUE = new LinkedBlockingDeque<>(1024*1024);
+    private static final ExecutorService executorService = Executors.newFixedThreadPool(20);
 
 
     public class task implements Runnable {
+
+
         @Override
         public void run() {
             while (true) {
                 try {
                     Orders take = ORDERS_QUEUE.take();
-                    reduceStock(take);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
+                    proxy.reduceStock(take);
+                } catch (Exception e) {
+                    log.error("订单处理异常", e);
+
                 }
             }
         }
@@ -77,7 +81,7 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders>
 
     @Override
     public Result saveOrder(Orders requestOrders) {
-        System.out.println(requestOrders);
+
 
         Integer userId = UserHold.getUser();
         Integer result = null;
@@ -106,7 +110,6 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders>
 
         GenerateId work = new GenerateId(stringRedisTemplate);
         long orderId = work.generateId("order");
-        System.out.println("订单生成成功，订单id为：" + orderId);
         Orders orders = new Orders();
         orders.setId(orderId);
         orders.setPrice(requestOrders.getPrice());
@@ -117,6 +120,9 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders>
         super.save(orders);
         //额外开个线程进行删减库存
         ORDERS_QUEUE.add(orders);
+        OrdersService proxy = (OrdersService) AopContext.currentProxy();
+        this.proxy = proxy;
+
 
         return Result.success(String.valueOf(orderId));
     }
@@ -150,6 +156,15 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders>
         String payedKey = "order:pay:" + order.getUserId();
         stringRedisTemplate.opsForHash().increment(payedKey, order.getPerformanceId().toString(), order.getNum());
         stringRedisTemplate.opsForHash().increment(pendingKey, order.getPerformanceId().toString(), -order.getNum());
+        ArrayList<UserTicket> userTickets = new ArrayList<>(order.getNum());
+        for (int i = 0; i < order.getNum(); i++) {
+            UserTicket userTicket = new UserTicket();
+            userTicket.setUserId(order.getUserId());
+            userTicket.setTicketId(order.getTicketId());
+            userTicket.setStatus(TicketStatus.UNUSED);
+            userTickets.add(userTicket);
+        }
+        userTicketService.saveBatch(userTickets, 100);
         return Result.success("支付成功");
     }
 
@@ -191,38 +206,21 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders>
         ClassPathResource resource = new ClassPathResource("com/order.lua");
         redisScript.setScriptSource(new ResourceScriptSource(resource));
         redisScript.setResultType(Long.class);
-        executorService.submit(new task());
+        for (int i = 0; i < 50; i++) { // 启动50个消费者
+            executorService.submit(new task());
+        }
+
     }
 
+    @Transactional
     public void reduceStock(Orders orders) {
-        RLock lock = redissonClient.getLock("lock:ticket:" + orders.getUserId() + ":" + orders.getTicketId());
-        try {
-            boolean b = lock.tryLock(10, TimeUnit.SECONDS);
-            if (!b) {
-                return;
-            }
-            Integer ticketId = orders.getTicketId();
-            UpdateWrapper<Ticket> ticketUpdateWrapper = new UpdateWrapper<>();
-            ticketUpdateWrapper.eq("id", ticketId);
-            ticketUpdateWrapper.setSql("stock = stock - " + orders.getNum());
-            ticketUpdateWrapper.ge("stock", orders.getNum());
-            ticketService.update(ticketUpdateWrapper);
-            ArrayList<UserTicket> userTickets = new ArrayList<>(orders.getNum());
-            for (int i = 0; i < orders.getNum(); i++) {
-                UserTicket userTicket = new UserTicket();
-                userTicket.setUserId(orders.getUserId());
-                userTicket.setTicketId(orders.getTicketId());
-                userTicket.setStatus(TicketStatus.UNUSED);
-                userTickets.add(userTicket);
-            }
-             userTicketService.saveBatch(userTickets, 100);
+        Integer ticketId = orders.getTicketId();
+        UpdateWrapper<Ticket> ticketUpdateWrapper = new UpdateWrapper<>();
+        ticketUpdateWrapper.eq("id", ticketId);
+        ticketUpdateWrapper.setSql("stock = stock - " + orders.getNum());
+        ticketUpdateWrapper.ge("stock", orders.getNum());
+        ticketService.update(ticketUpdateWrapper);
 
-
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        } finally {
-            lock.unlock();
-        }
 
 
     }

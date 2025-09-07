@@ -12,11 +12,18 @@
 
 
     <select id="getCityByEventId" resultType="com.shop.dto.CityDto">
-        SELECT DISTINCT c.id, c.name, v.name venue
-        FROM performances p
-                 JOIN EVENTS e ON p.`event_id` = e.id
-                 JOIN venues v ON p.`venue_id` = v.id
-                 JOIN city c ON c.id = v.city_id
-        WHERE e.id = #{id}
+        WITH ranked AS (
+            SELECT c.id, c.name, v.name AS venue, p.start_time,
+                   ROW_NUMBER() OVER (PARTITION BY c.id, v.id ORDER BY p.start_time) AS rn
+            FROM performances p
+                     JOIN EVENTS e ON p.event_id = e.id
+                     JOIN venues v ON p.venue_id = v.id
+                     JOIN city c ON c.id = v.city_id
+            WHERE e.id = #{id}
+        )
+        SELECT id, name, venue
+        FROM ranked
+        WHERE rn = 1
+        ORDER BY start_time;
     </select>
 </mapper>

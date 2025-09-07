@@ -1,7 +1,11 @@
 package com.shop.mapper;
 
+import com.shop.dto.PerformanceDto;
 import com.shop.entity.User;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
 
 /**
 * @author 陈增
@@ -11,6 +15,9 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 */
 public interface UserMapper extends BaseMapper<User> {
 
+    List<Integer> like(Integer eventId, Integer cityId);
+
+    List<PerformanceDto> getUserLike( List<Integer> performanceIds);
 }
 
 

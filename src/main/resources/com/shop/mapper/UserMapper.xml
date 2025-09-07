@@ -12,8 +12,61 @@
             <result property="url" column="url" />
             <result property="isDeleted" column="is_deleted" />
     </resultMap>
+    <select id="like" resultType="java.lang.Integer">
+        SELECT  p.id
+        FROM performances p
+                 JOIN events e ON p.event_id = e.id
+                 JOIN venues v ON p.venue_id = v.id
+                 JOIN city c ON c.id = v.city_id
+        WHERE
+           e.id = #{eventId}
+        and c.id = #{cityId}
 
-    <sql id="Base_Column_List">
-        id,order_id,account,name,url,is_deleted
-    </sql>
+
+    </select>
+    <select id="getUserLike" resultType="com.shop.dto.PerformanceDto">
+        SELECT
+        e.id AS event_id,
+        e.title,
+        i.url,
+        MIN(p.start_time) AS first_show,
+        MAX(p.start_time) AS last_show,
+        e.artist,
+        v.name as venue,
+        c.name as city,
+        c.id AS cityId
+
+
+        FROM performances p
+        JOIN EVENTS e ON e.id = p.event_id
+        JOIN venues v ON p.venue_id = v.id
+        JOIN city c ON v.city_id = c.id
+        JOIN event_type t ON e.type_id = t.id
+        JOIN images i ON e.id = i.event_id AND i.is_deleted = 0
+
+        WHERE p.is_deleted = 0
+        AND p.status = 0
+        AND e.is_deleted = 0
+        AND e.status = 0
+        AND i.is_deleted = 0
+        <if test="performanceIds != null and performanceIds.size > 0">
+            AND p.id IN
+            <foreach collection="performanceIds" item="id" open="(" separator="," close=")">
+                #{id}
+            </foreach>
+        </if>
+
+        GROUP BY e.id,
+        e.title,
+        c.name,
+        v.name,
+        i.url,
+        c.id,
+        e.artist
+
+
+    </select>
+
+
+
 </mapper>
