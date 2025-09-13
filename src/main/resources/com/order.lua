@@ -30,6 +30,6 @@ redis.call("INCRBY", stockKey, -count)
 redis.call("HINCRBY", pendingHash, performanceId, count)
 
 -- 5. 设置 3 分钟过期
-redis.call("EXPIRE", pendingHash, 1800)
+redis.call("EXPIRE", pendingHash, 180)
 
 return 0

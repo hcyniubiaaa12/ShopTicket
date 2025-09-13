@@ -1,6 +1,5 @@
 package com.shop.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.shop.dto.OrderDto;
@@ -8,12 +7,14 @@ import com.shop.entity.Orders;
 import com.shop.entity.Ticket;
 import com.shop.entity.UserTicket;
 import com.shop.enums.OrderStatus;
+import com.shop.enums.SaleStatus;
 import com.shop.enums.TicketStatus;
 import com.shop.result.Result;
 import com.shop.service.*;
 import com.shop.mapper.OrdersMapper;
 import com.shop.userhold.UserHold;
 import com.shop.utils.GenerateId;
+import com.shop.vo.OrdersVo;
 import jakarta.annotation.PostConstruct;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
@@ -26,11 +27,11 @@ import org.springframework.scripting.support.ResourceScriptSource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.*;
 
 /**
@@ -42,7 +43,7 @@ import java.util.concurrent.*;
 public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders>
         implements OrdersService {
 
-   private  OrdersService proxy;
+    private OrdersService proxy;
 
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
@@ -56,21 +57,19 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders>
     private UserTicketService userTicketService;
 
 
-
     private static final DefaultRedisScript<Long> redisScript = new DefaultRedisScript<>();
-    private static final BlockingDeque<Orders> ORDERS_QUEUE = new LinkedBlockingDeque<>(1024*1024);
+    private static final BlockingDeque<Orders> ORDERS_QUEUE = new LinkedBlockingDeque<>(1024 * 1024);
     private static final ExecutorService executorService = Executors.newFixedThreadPool(20);
 
 
     public class task implements Runnable {
-
-
         @Override
         public void run() {
+
             while (true) {
                 try {
                     Orders take = ORDERS_QUEUE.take();
-                    proxy.reduceStock(take);
+                    handleOrder(take);
                 } catch (Exception e) {
                     log.error("订单处理异常", e);
 
@@ -80,8 +79,14 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders>
     }
 
     @Override
-    public Result saveOrder(Orders requestOrders) {
+    public Result saveOrder(OrdersVo requestOrders) {
+        switch (requestOrders.getSaleStatus()) {
+            case NOT_OPENED:
+                return Result.fail("该演出未开始售卖");
 
+            case SALE_ENDED:
+              return Result.fail("该演出已停止售卖");
+        }
 
         Integer userId = UserHold.getUser();
         Integer result = null;
@@ -119,10 +124,9 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders>
         orders.setNum(requestOrders.getNum());
         super.save(orders);
         //额外开个线程进行删减库存
-        ORDERS_QUEUE.add(orders);
-        OrdersService proxy = (OrdersService) AopContext.currentProxy();
-        this.proxy = proxy;
+        proxy = (OrdersService) AopContext.currentProxy();
 
+        ORDERS_QUEUE.add(orders);
 
         return Result.success(String.valueOf(orderId));
     }
@@ -176,6 +180,7 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders>
     @Override
     @Transactional
     public Result cancel(Long id) {
+
         Orders order = super.getById(id);
         switch (order.getStatus()) {
             case PAID:
@@ -183,6 +188,8 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders>
             case CANCELED:
                 return Result.fail("订单已取消");
         }
+
+
         String pendingKey = "order:pending:" + order.getUserId();
         String stockKey = "stock:ticket:" + order.getTicketId();
         stringRedisTemplate.opsForHash().increment(pendingKey, order.getPerformanceId().toString(), -order.getNum());
@@ -206,8 +213,26 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders>
         ClassPathResource resource = new ClassPathResource("com/order.lua");
         redisScript.setScriptSource(new ResourceScriptSource(resource));
         redisScript.setResultType(Long.class);
-        for (int i = 0; i < 50; i++) { // 启动50个消费者
+        warmUpRedis();
+        for (int i = 0; i < 20; i++) { // 启动20个消费者
             executorService.submit(new task());
+        }
+
+    }
+
+    public void handleOrder(Orders orders) {
+        RLock lock = redissonClient.getLock("order:userId:" + orders.getUserId());
+        try {
+            boolean flag = lock.tryLock(2, TimeUnit.SECONDS);
+            if (!flag) {
+                log.error("获取锁失败");
+                return;
+            }
+            proxy.reduceStock(orders);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        } finally {
+            lock.unlock();
         }
 
     }
@@ -222,7 +247,16 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders>
         ticketService.update(ticketUpdateWrapper);
 
 
+    }
 
+    public void warmUpRedis() {
+        try {
+            stringRedisTemplate.opsForValue().set("warmup", "ok");
+            stringRedisTemplate.expire("warmup", Duration.ofSeconds(10));
+            System.out.println("✅ Redis 连接池预热完成");
+        } catch (Exception e) {
+            log.error("❌ Redis 连接池预热失败", e);
+        }
     }
 
 }

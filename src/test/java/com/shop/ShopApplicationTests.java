@@ -1,14 +1,12 @@
 package com.shop;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.shop.controller.CaptchaController;
+import com.shop.config.Quartz;
 import com.shop.controller.UploadController;
-import com.shop.entity.User;
 import com.shop.result.Result;
+import com.shop.service.OrdersService;
 import com.shop.service.PerformancesService;
-import com.shop.service.UserService;
+import com.shop.service.TicketService;
 import com.shop.service.impl.UserServiceImpl;
-import com.shop.utils.GenerateId;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -18,12 +16,6 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
-
-import static com.shop.service.impl.UserServiceImpl.generateRandomName;
 
 @SpringBootTest
 class ShopApplicationTests {
@@ -33,8 +25,14 @@ class ShopApplicationTests {
     private UploadController uploadController;
     @Autowired
     private UserServiceImpl userService;
-   @Autowired
-   private StringRedisTemplate stringRedisTemplate;
+    @Autowired
+    private StringRedisTemplate stringRedisTemplate;
+    @Autowired
+    private Quartz quartz;
+    @Autowired
+    private OrdersService ordersService;
+    @Autowired
+    private TicketService ticketService;
 
 
     @Test
@@ -62,27 +60,31 @@ class ShopApplicationTests {
 
 
     }
-    @Test
-    void test2(){
-       for (int i = 1; i <=10000; i++) {
-           stringRedisTemplate.delete("order:pending:" + i);
 
-       }
+    @Test
+    void test2() {
+        for (int i = 1; i <= 10000; i++) {
+            stringRedisTemplate.delete("order:pending:" + i);
+
+        }
 
     }
 
     @Test
     void test3() {
-        userService.generateTestTokens(5000);
+        userService.generateTestTokens(3000);
 
     }
 
     @Test
-    void test4() {
-        LocalDateTime now = LocalDateTime.now();
-        System.out.println( now);
-    }
+    void test4() throws InterruptedException {
 
+        System.out.println("⏳ 等待任务执行... 按 Ctrl+C 可提前终止");
+        Thread.sleep(3000);
+        quartz.removeJob("test");
+        System.out.println("✅ 测试结束");
+
+    }
 
 
 }

@@ -1,15 +1,41 @@
+
 spring:
+  quartz:
+    job-store-type: memory
+    overwrite-existing-jobs: true
+    properties:
+      org:
+        quartz:
+          scheduler:
+            instanceName: MyInMemoryScheduler
+          threadPool:
+            threadCount: 5
+
   datasource:
     username: root
     password: 19859351310
     url: jdbc:mysql://localhost:3306/ticket?useSSL=false&charsetEncoding=utf8
     driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 100
+      minimum-idle: 50
+
   data:
     redis:
       host: 192.168.1.9
       port: 6379
       database: 2
-      timeout: 2000
+      timeout: 5000
+      lettuce:
+        pool:
+          max-active: 100   #
+          max-idle: 50
+          min-idle: 10
+          max-wait: 5000ms  # 获取连接最大等待时间
+
+
+
+
 
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
@@ -38,6 +64,7 @@ langchain4j:
 logging:
   level:
     root: INFO
+
 minio:
   endpoint: http://192.168.1.9:9000
   access-key: admin

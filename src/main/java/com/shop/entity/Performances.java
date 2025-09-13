@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 
 import com.shop.enums.PerformanceStatus;
@@ -36,7 +37,12 @@ public class Performances {
     /**
      * 开始时间
      */
-    private Date startTime;
+    private LocalDateTime startTime;
+
+    /**
+     * 售票时间
+     */
+    private LocalDateTime buyTime;
 
     /**
      * 演出时长

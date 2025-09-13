@@ -4,6 +4,7 @@ import com.shop.dto.OrderDto;
 import com.shop.entity.Orders;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.shop.result.Result;
+import com.shop.vo.OrdersVo;
 
 import java.util.List;
 
@@ -14,7 +15,7 @@ import java.util.List;
 */
 public interface OrdersService extends IService<Orders> {
 
-    Result saveOrder(Orders order);
+    Result saveOrder(OrdersVo order);
 
 
     Result pay(Long id);

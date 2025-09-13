@@ -1,16 +1,14 @@
 package com.shop.controller;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.shop.dto.OrderDto;
 import com.shop.entity.Orders;
-import com.shop.enums.OrderStatus;
 import com.shop.result.Result;
-import com.shop.service.OrderService;
 import com.shop.service.OrdersService;
 import com.shop.userhold.UserHold;
+import com.shop.vo.OrdersVo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,11 +18,13 @@ import java.util.List;
 @RequestMapping("/order")
 public class OrderController {
 
+
     @Autowired
     private OrdersService ordersService;
 
     @PostMapping("/saveOrder")
-    public Result saveOrder(@RequestBody Orders order) {
+    public Result saveOrder(@RequestBody OrdersVo order) {
+
         return ordersService.saveOrder(order);
     }
 
