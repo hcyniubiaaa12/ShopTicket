@@ -15,9 +15,9 @@ import java.util.List;
 */
 public interface PerformancesMapper extends BaseMapper<Performances> {
 
-    List<PerformanceDto> getAllPerformance();
 
-    List<PerformanceDto> getPerformanceById(Integer id);
+
+    List<PerformanceDto> getPerformanceById(Integer typeId,Integer cityId);
 
     List<PerformanceDto> getPerformanceByEventId(Integer id,Integer cityId);
 

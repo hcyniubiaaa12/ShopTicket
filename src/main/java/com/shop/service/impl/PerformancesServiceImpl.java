@@ -23,13 +23,8 @@ public class PerformancesServiceImpl extends ServiceImpl<PerformancesMapper, Per
     private PerformancesMapper performancesMapper;
 
     @Override
-    public List<PerformanceDto> getPerformanceById(Integer id) {
-        return performancesMapper.getPerformanceById(id);
-    }
-
-    @Override
-    public List<PerformanceDto> getAllPerformance() {
-        return performancesMapper.getAllPerformance();
+    public List<PerformanceDto> getPerformanceById(Integer typeId,Integer cityId) {
+        return performancesMapper.getPerformanceById(typeId,cityId);
     }
 
     @Override

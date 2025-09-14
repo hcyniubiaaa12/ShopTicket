@@ -1,4 +1,4 @@
-package com.shop.controller.task;
+package com.shop.task;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;

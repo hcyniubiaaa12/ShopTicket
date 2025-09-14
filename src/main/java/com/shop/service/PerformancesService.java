@@ -14,9 +14,8 @@ import java.util.List;
 */
 public interface PerformancesService extends IService<Performances> {
 
-   List<PerformanceDto> getPerformanceById(Integer id);
+   List<PerformanceDto> getPerformanceById(Integer typeId,Integer cityId);
 
-   List<PerformanceDto> getAllPerformance();
 
     List<PerformanceDto> getPerformanceByEventId(Integer id,Integer cityId);
 

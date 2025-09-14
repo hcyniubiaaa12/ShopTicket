@@ -22,11 +22,11 @@ public class PerformanceController {
     @Autowired
     private StringRedisTemplate redisTemplate;
 
-    @GetMapping("/{id}")
-    public Result<List<PerformanceDto>> getPerformanceByTypeId(@PathVariable Integer id) {
+    @GetMapping
+    public Result<List<PerformanceDto>> getPerformanceByTypeId(@RequestParam(defaultValue = "")  Integer typeId,@RequestParam(defaultValue = "") Integer cityId) {
 //        String performance = redisTemplate.opsForValue().get("performance:type:"+id);
 //        if (performance == null) {
-            List<PerformanceDto> list = performancesService.getPerformanceById(id);
+            List<PerformanceDto> list = performancesService.getPerformanceById(typeId,cityId);
 //            if (list == null) {
 //                redisTemplate.opsForValue().set("performance:type:"+id, " ",3,TimeUnit.SECONDS);
 //                return Result.success(null);
@@ -37,21 +37,7 @@ public class PerformanceController {
         return Result.success(list);
     }
 
-    @GetMapping
-    public Result<List<PerformanceDto>> getAllPerformance() {
-//        String performance = redisTemplate.opsForValue().get("performance");
-//        if (performance == null) {
-            List<PerformanceDto> list = performancesService.getAllPerformance();
-//            if (list == null) {
-//                redisTemplate.opsForValue().set("performance", " ");
-//                return Result.success(null);
-//            }
-//            redisTemplate.opsForValue().set("performance", JSONUtil.toJsonStr(list));
-//            return Result.success(list);
-//        }
-//        List<PerformanceDto> list = JSONUtil.toList(performance, PerformanceDto.class);
-        return Result.success(list);
-    }
+
 
     @GetMapping("/getPerformanceByEventId/{id}")
     public Result<List<PerformanceDto>> getPerformanceByEventId(@PathVariable Integer id,Integer cityId) {

@@ -5,94 +5,69 @@
 <mapper namespace="com.shop.mapper.PerformancesMapper">
 
 
-    <select id="getAllPerformance" resultType="com.shop.dto.PerformanceDto">
-        SELECT
-            min_pr.min_price       AS min_price,
-            e.id                   AS event_id,
-            e.title,
-            i.url,
-            MIN(p.start_time)      AS first_show,
-            MAX(p.start_time)      AS last_show,
-            e.artist,
-            v.name as venue,
-            c.name as city,
-            c.id AS cityId
 
-
-        FROM performances p
-                 JOIN EVENTS e ON e.id = p.event_id
-                 JOIN (SELECT MIN(price) min_price, event_id
-                       FROM price
-                       WHERE price.`is_deleted` = 0
-                       GROUP BY event_id) min_pr
-                      ON min_pr.event_id = e.id
-                 JOIN venues v ON p.venue_id = v.id
-                 JOIN city c ON v.city_id = c.id
-
-                 JOIN images i ON e.id = i.event_id AND i.is_deleted = 0
-
-        WHERE p.is_deleted = 0
-
-          AND e.is_deleted = 0
-          AND e.status = 0
-          AND i.is_deleted = 0
-
-
-        GROUP BY e.id,
-                 e.title,
-                 c.name,
-                 v.name,
-                 i.url,
-                 c.id
-
-
-        ORDER BY min_price
-    </select>
     <select id="getPerformanceById" resultType="com.shop.dto.PerformanceDto">
-        SELECT min_pr.min_price  AS min_price,
-               e.id              AS event_id,
-               e.title,
-               i.url,
-               MIN(p.start_time) AS first_show,
-               MAX(p.start_time) AS last_show,
-               e.artist,
-               v.name            as venue,
-               c.name            as city,
-               c.id AS cityId,
-               t.name           as typeName
-
-
-
+        SELECT
+        min_pr.min_price AS min_price,
+        e.id AS event_id,
+        e.title,
+        i.url,
+        MIN(p.start_time) AS first_show,
+        MAX(p.start_time) AS last_show,
+        e.artist,
+        v.name AS venue,
+        c.name AS city,
+        c.id AS cityId
+        <!-- 动态添加 typeName 字段 -->
+        <if test="typeId != null and typeId != ''">
+            , t.name AS typeName
+        </if>
         FROM performances p
-                 JOIN EVENTS e ON e.id = p.event_id
-                 JOIN (SELECT MIN(price) min_price, event_id
-                       FROM price
-                       WHERE price.`is_deleted` = 0
-                       GROUP BY event_id) min_pr
-                      ON min_pr.event_id = e.id
-                 JOIN venues v ON p.venue_id = v.id
-                 JOIN city c ON v.city_id = c.id
-                 JOIN event_type t ON e.type_id = t.id
+        JOIN EVENTS e ON e.id = p.event_id
+        JOIN (
+        SELECT MIN(price) AS min_price, event_id
+        FROM price
+        WHERE price.is_deleted = 0
+        GROUP BY event_id
+        ) min_pr ON min_pr.event_id = e.id
+        JOIN venues v ON p.venue_id = v.id
+        JOIN city c ON v.city_id = c.id
+        JOIN images i ON e.id = i.event_id AND i.is_deleted = 0
 
-                 JOIN images i ON e.id = i.event_id AND i.is_deleted = 0
+        <!-- 动态加入 event_type JOIN 和 WHERE 条件 -->
+        <if test="typeId != null and typeId != ''" >
+            JOIN event_type t ON e.type_id = t.id
+            WHERE p.is_deleted = 0
+            AND e.is_deleted = 0
+            AND e.status = 0
+            AND i.is_deleted = 0
+            AND t.id = #{typeId}
+        </if>
 
-        WHERE p.is_deleted = 0
+        <if test="typeId == null or typeId == ''">
+            WHERE p.is_deleted = 0
+            AND e.is_deleted = 0
+            AND e.status = 0
+            AND i.is_deleted = 0
+        </if>
+        GROUP BY
+        e.id,
+        e.title,
+        c.name,
+        v.name,
+        i.url,
+        c.id
+        <!-- 动态添加 typeName 到 GROUP BY -->
+        <if test="typeId != null and typeId != ''">
+            , t.name
+        </if>
 
-          AND e.is_deleted = 0
-          AND e.status = 0
-          AND i.is_deleted = 0
-          AND t.id = #{id}
-
-
-        GROUP BY e.id,
-                 e.title,
-                 c.name,
-                 v.name,
-                 i.url,
-                 c.id
-
-
-        ORDER BY  MIN(p.start_time)
+        <!-- ✅ 关键修改：城市优先排序 -->
+        ORDER BY
+        <if test="cityId != null and cityId != ''">
+            CASE WHEN c.id = #{cityId} THEN 0 ELSE 1 END,
+        </if>
+        MIN(p.start_time) DESC
     </select>
     <select id="getPerformanceByEventId" resultType="com.shop.dto.PerformanceDto">
 
