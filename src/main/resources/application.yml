@@ -1,15 +1,5 @@
 
 spring:
-  quartz:
-    job-store-type: memory
-    overwrite-existing-jobs: true
-    properties:
-      org:
-        quartz:
-          scheduler:
-            instanceName: MyInMemoryScheduler
-          threadPool:
-            threadCount: 5
 
   datasource:
     username: root
@@ -33,10 +23,6 @@ spring:
           min-idle: 10
           max-wait: 5000ms  # 获取连接最大等待时间
 
-
-
-
-
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: Asia/Shanghai
@@ -44,11 +30,11 @@ mybatis-plus:
   executor-type: batch
   global-config:
     db-config:
-      logic-delete-field: isDeleted # ?????????
-      logic-delete-value: 1 # ?????????????? 1
-      logic-not-delete-value: 0 # ?????????????? 0
+      logic-delete-field: isDeleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
   configuration:
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
     default-executor-type: batch
 langchain4j:
   community:
@@ -62,8 +48,8 @@ langchain4j:
         model-name: text-embedding-v4
         api-key: sk-4d9a8f600ad24543bb3630543f98f64e
 logging:
-  level:
-    root: INFO
+  config: classpath:logback-spring.xml  # 显式指定
+
 
 minio:
   endpoint: http://192.168.1.9:9000

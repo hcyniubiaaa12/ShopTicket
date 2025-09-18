@@ -29,8 +29,8 @@ public class ScheduleTask {
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
 
-    @Scheduled(cron = "* */40 * * * *")
 
+  @Scheduled(cron = "30 * * * * ?")
     public void checkPendingTask() {
         String key = "stock:ticket:";
         QueryWrapper<Orders> ordersQueryWrapper = new QueryWrapper<>();
@@ -51,12 +51,14 @@ public class ScheduleTask {
                 stringRedisTemplate.opsForValue().increment(key + orders.getTicketId().toString(), orders.getNum());
 
 
+
+
             }
         }
     }
 
-    @Scheduled(cron = "* * */7 * * *")
 
+    @Scheduled(cron = "* * 8 * * ?")
     public void checkPerformanceStatus() {
         QueryWrapper<Performances> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("status", 1)

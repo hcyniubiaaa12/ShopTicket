@@ -45,7 +45,6 @@
         JOIN images i ON e.id = i.event_id AND i.is_deleted = 0
 
         WHERE p.is_deleted = 0
-        AND p.status = 0
         AND e.is_deleted = 0
         AND e.status = 0
         AND i.is_deleted = 0

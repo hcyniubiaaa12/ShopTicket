@@ -1,13 +1,15 @@
 package com.shop;
 
-import com.shop.config.Quartz;
 import com.shop.controller.UploadController;
 import com.shop.result.Result;
 import com.shop.service.OrdersService;
 import com.shop.service.PerformancesService;
 import com.shop.service.TicketService;
 import com.shop.service.impl.UserServiceImpl;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
@@ -19,6 +21,7 @@ import java.io.IOException;
 
 @SpringBootTest
 class ShopApplicationTests {
+    private static final Logger log = LoggerFactory.getLogger(ShopApplicationTests.class);
     @Autowired
     private PerformancesService performancesService;
     @Autowired
@@ -27,8 +30,7 @@ class ShopApplicationTests {
     private UserServiceImpl userService;
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
-    @Autowired
-    private Quartz quartz;
+
     @Autowired
     private OrdersService ordersService;
     @Autowired
@@ -63,10 +65,9 @@ class ShopApplicationTests {
 
     @Test
     void test2() {
-        for (int i = 1; i <= 10000; i++) {
-            stringRedisTemplate.delete("order:pending:" + i);
-
-        }
+       stringRedisTemplate.opsForValue().set("stock:ticket:"+54, "10000");
+       stringRedisTemplate.opsForValue().set("stock:ticket:"+55, "10000");
+       stringRedisTemplate.opsForValue().set("stock:ticket:"+56, "10000");
 
     }
 
@@ -77,12 +78,9 @@ class ShopApplicationTests {
     }
 
     @Test
+
     void test4() throws InterruptedException {
 
-        System.out.println("⏳ 等待任务执行... 按 Ctrl+C 可提前终止");
-        Thread.sleep(3000);
-        quartz.removeJob("test");
-        System.out.println("✅ 测试结束");
 
     }
 
