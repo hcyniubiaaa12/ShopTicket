@@ -1,5 +1,22 @@
-
 spring:
+  rabbitmq:
+    # 连接信息
+    host: 192.168.1.9      # 替换为您的 Ubuntu 服务器 IP
+    port: 5672             # 默认 AMQP 端口
+    username: admin        # 您在 RabbitMQ 中创建的用户名
+    password: 123456 # 对应的密码
+    virtual-host: /
+    connection-timeout: 1s
+    template:
+      retry:
+        enabled: true
+        multiplier: 2.0
+    listener:
+      simple:
+        prefetch: 1
+        retry:
+          enabled: true
+          multiplier: 2.0
 
   datasource:
     username: root
@@ -34,7 +51,7 @@ mybatis-plus:
       logic-delete-value: 1
       logic-not-delete-value: 0
   configuration:
-#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
     default-executor-type: batch
 langchain4j:
   community:

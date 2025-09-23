@@ -24,5 +24,5 @@ public interface OrdersService extends IService<Orders> {
 
     Result cancel(Long id);
 
-    void reduceStock(Orders take);
+    void reduceStock(Orders order);
 }

@@ -73,7 +73,7 @@ class ShopApplicationTests {
 
     @Test
     void test3() {
-        userService.generateTestTokens(3000);
+        userService.generateTestTokens(1500);
 
     }
 

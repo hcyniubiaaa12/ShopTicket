@@ -7,17 +7,24 @@ import com.shop.entity.Orders;
 import com.shop.entity.Ticket;
 import com.shop.entity.UserTicket;
 import com.shop.enums.OrderStatus;
-import com.shop.enums.SaleStatus;
 import com.shop.enums.TicketStatus;
 import com.shop.result.Result;
 import com.shop.service.*;
 import com.shop.mapper.OrdersMapper;
 import com.shop.userhold.UserHold;
 import com.shop.utils.GenerateId;
+import com.shop.utils.MqConstants;
+import com.shop.utils.MultiDelayMessage;
 import com.shop.vo.OrdersVo;
 import jakarta.annotation.PostConstruct;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.amqp.AmqpException;
+import org.springframework.amqp.core.Message;
+import org.springframework.amqp.core.MessagePostProcessor;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.aop.framework.AopContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
@@ -28,8 +35,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.*;
@@ -55,28 +62,29 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders>
     private OrdersMapper ordersMapper;
     @Autowired
     private UserTicketService userTicketService;
-
-
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
+    private static final Logger log = LoggerFactory.getLogger(OrdersServiceImpl.class);
     private static final DefaultRedisScript<Long> redisScript = new DefaultRedisScript<>();
     private static final BlockingDeque<Orders> ORDERS_QUEUE = new LinkedBlockingDeque<>(1024 * 1024);
     private static final ExecutorService executorService = Executors.newFixedThreadPool(20);
 
 
-    public class task implements Runnable {
-        @Override
-        public void run() {
-
-            while (true) {
-                try {
-                    Orders take = ORDERS_QUEUE.take();
-                    handleOrder(take);
-                } catch (Exception e) {
-                    log.error("订单处理异常", e);
-
-                }
-            }
-        }
-    }
+//    public class task implements Runnable {
+//        @Override
+//        public void run() {
+//
+//            while (true) {
+//                try {
+//                    Orders take = ORDERS_QUEUE.take();
+//                    handleOrder(take);
+//                } catch (Exception e) {
+//                    log.error("订单处理异常", e);
+//
+//                }
+//            }
+//        }
+//    }
 
     @Override
     public Result saveOrder(OrdersVo requestOrders) {
@@ -85,7 +93,7 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders>
                 return Result.fail("该演出未开始售卖");
 
             case SALE_ENDED:
-              return Result.fail("该演出已停止售卖");
+                return Result.fail("该演出已停止售卖");
         }
 
         Integer userId = UserHold.getUser();
@@ -125,8 +133,10 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders>
         super.save(orders);
         //额外开个线程进行删减库存
         proxy = (OrdersService) AopContext.currentProxy();
+        //发送订单消息给消费者进行删减库存
+        rabbitTemplate.convertAndSend(MqConstants.ORDER_EXCHANGE, MqConstants.ORDER_ROUTING_KEY, orders);
 
-        ORDERS_QUEUE.add(orders);
+        //       ORDERS_QUEUE.add(orders);
 
         return Result.success(String.valueOf(orderId));
     }
@@ -213,14 +223,33 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders>
         ClassPathResource resource = new ClassPathResource("com/order.lua");
         redisScript.setScriptSource(new ResourceScriptSource(resource));
         redisScript.setResultType(Long.class);
-        warmUpRedis();
-        for (int i = 0; i < 20; i++) { // 启动20个消费者
-            executorService.submit(new task());
-        }
+//        warmUpRedis();
+//        for (int i = 0; i < 20; i++) { // 启动20个消费者
+//            executorService.submit(new task());
+//        }
 
     }
 
-    public void handleOrder(Orders orders) {
+//    public void handleOrder(Orders orders) {
+//        RLock lock = redissonClient.getLock("order:userId:" + orders.getUserId());
+//        try {
+//            boolean flag = lock.tryLock(2, TimeUnit.SECONDS);
+//            if (!flag) {
+//                log.error("获取锁失败");
+//                return;
+//            }
+//            proxy.reduceStock(orders);
+//        } catch (InterruptedException e) {
+//            throw new RuntimeException(e);
+//        } finally {
+//            lock.unlock();
+//        }
+//
+//    }
+
+    @Transactional
+    public void reduceStock(Orders orders) {
+        log.info(String.valueOf(orders));
         RLock lock = redissonClient.getLock("order:userId:" + orders.getUserId());
         try {
             boolean flag = lock.tryLock(2, TimeUnit.SECONDS);
@@ -228,23 +257,34 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders>
                 log.error("获取锁失败");
                 return;
             }
-            proxy.reduceStock(orders);
+            Integer ticketId = orders.getTicketId();
+            UpdateWrapper<Ticket> ticketUpdateWrapper = new UpdateWrapper<>();
+            ticketUpdateWrapper.eq("id", ticketId)
+                    .setSql("stock = stock - {0}", orders.getNum())
+                    .ge("stock", orders.getNum());
+
+            ticketService.update(ticketUpdateWrapper);
+            MultiDelayMessage<Long> multiDelayMessage = new MultiDelayMessage<>();
+            multiDelayMessage.setDelayMessage(orders.getId(), List.of(
+                    60 * 1000L    // 5分钟
+//                    10 * 60 * 1000L,   // 10分钟
+//                    15 * 60 * 1000L    // 15分钟
+            ));
+            Long delay = multiDelayMessage.removeNextDelay();
+            rabbitTemplate.convertAndSend(MqConstants.CHECK_ORDER_EXCHANGE, MqConstants.CHECK_ORDER_ROUTING_KEY, multiDelayMessage, new MessagePostProcessor() {
+                @Override
+                public Message postProcessMessage(Message message) throws AmqpException {
+
+                    message.getMessageProperties().setDelayLong(delay);
+                    return message;
+                }
+            });
+
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         } finally {
             lock.unlock();
         }
-
-    }
-
-    @Transactional
-    public void reduceStock(Orders orders) {
-        Integer ticketId = orders.getTicketId();
-        UpdateWrapper<Ticket> ticketUpdateWrapper = new UpdateWrapper<>();
-        ticketUpdateWrapper.eq("id", ticketId);
-        ticketUpdateWrapper.setSql("stock = stock - " + orders.getNum());
-        ticketUpdateWrapper.ge("stock", orders.getNum());
-        ticketService.update(ticketUpdateWrapper);
 
 
     }
