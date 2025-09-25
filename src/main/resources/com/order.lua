@@ -29,7 +29,7 @@ redis.call("INCRBY", stockKey, -count)
 -- 4. 增加待支付
 redis.call("HINCRBY", pendingHash, performanceId, count)
 
--- 5. 设置 3 分钟过期
-redis.call("EXPIRE", pendingHash, 180)
+-- 5. 设置 30 分钟过期
+redis.call("EXPIRE", pendingHash, 1800)
 
 return 0

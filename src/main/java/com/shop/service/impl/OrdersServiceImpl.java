@@ -50,7 +50,7 @@ import java.util.concurrent.*;
 public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders>
         implements OrdersService {
 
-    private OrdersService proxy;
+
 
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
@@ -66,25 +66,6 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders>
     private RabbitTemplate rabbitTemplate;
     private static final Logger log = LoggerFactory.getLogger(OrdersServiceImpl.class);
     private static final DefaultRedisScript<Long> redisScript = new DefaultRedisScript<>();
-    private static final BlockingDeque<Orders> ORDERS_QUEUE = new LinkedBlockingDeque<>(1024 * 1024);
-    private static final ExecutorService executorService = Executors.newFixedThreadPool(20);
-
-
-//    public class task implements Runnable {
-//        @Override
-//        public void run() {
-//
-//            while (true) {
-//                try {
-//                    Orders take = ORDERS_QUEUE.take();
-//                    handleOrder(take);
-//                } catch (Exception e) {
-//                    log.error("订单处理异常", e);
-//
-//                }
-//            }
-//        }
-//    }
 
     @Override
     public Result saveOrder(OrdersVo requestOrders) {
@@ -131,12 +112,10 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders>
         orders.setPerformanceId(requestOrders.getPerformanceId());
         orders.setNum(requestOrders.getNum());
         super.save(orders);
-        //额外开个线程进行删减库存
-        proxy = (OrdersService) AopContext.currentProxy();
+
         //发送订单消息给消费者进行删减库存
         rabbitTemplate.convertAndSend(MqConstants.ORDER_EXCHANGE, MqConstants.ORDER_ROUTING_KEY, orders);
 
-        //       ORDERS_QUEUE.add(orders);
 
         return Result.success(String.valueOf(orderId));
     }
@@ -223,29 +202,10 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders>
         ClassPathResource resource = new ClassPathResource("com/order.lua");
         redisScript.setScriptSource(new ResourceScriptSource(resource));
         redisScript.setResultType(Long.class);
-//        warmUpRedis();
-//        for (int i = 0; i < 20; i++) { // 启动20个消费者
-//            executorService.submit(new task());
-//        }
+
 
     }
 
-//    public void handleOrder(Orders orders) {
-//        RLock lock = redissonClient.getLock("order:userId:" + orders.getUserId());
-//        try {
-//            boolean flag = lock.tryLock(2, TimeUnit.SECONDS);
-//            if (!flag) {
-//                log.error("获取锁失败");
-//                return;
-//            }
-//            proxy.reduceStock(orders);
-//        } catch (InterruptedException e) {
-//            throw new RuntimeException(e);
-//        } finally {
-//            lock.unlock();
-//        }
-//
-//    }
 
     @Transactional
     public void reduceStock(Orders orders) {
@@ -266,9 +226,9 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders>
             ticketService.update(ticketUpdateWrapper);
             MultiDelayMessage<Long> multiDelayMessage = new MultiDelayMessage<>();
             multiDelayMessage.setDelayMessage(orders.getId(), List.of(
-                    60 * 1000L    // 5分钟
-//                    10 * 60 * 1000L,   // 10分钟
-//                    15 * 60 * 1000L    // 15分钟
+                    60 * 1000L,    // 5分钟
+                    10 * 60 * 1000L,   // 10分钟
+                    15 * 60 * 1000L    // 15分钟
             ));
             Long delay = multiDelayMessage.removeNextDelay();
             rabbitTemplate.convertAndSend(MqConstants.CHECK_ORDER_EXCHANGE, MqConstants.CHECK_ORDER_ROUTING_KEY, multiDelayMessage, new MessagePostProcessor() {
@@ -289,15 +249,7 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders>
 
     }
 
-    public void warmUpRedis() {
-        try {
-            stringRedisTemplate.opsForValue().set("warmup", "ok");
-            stringRedisTemplate.expire("warmup", Duration.ofSeconds(10));
-            System.out.println("✅ Redis 连接池预热完成");
-        } catch (Exception e) {
-            log.error("❌ Redis 连接池预热失败", e);
-        }
-    }
+
 
 }
 
