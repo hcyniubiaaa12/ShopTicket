@@ -138,6 +138,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
     }
 
+    @Override
+    public Result logout(Integer userId, String token) {
+        redisTemplate.delete("user:" + token);
+        return Result.success( null);
+    }
+
     public void generateTestTokens(int count) {
         // 准备 CSV 文件路径（项目根目录下）
         String filePath = "test_tokens.csv";

@@ -9,6 +9,9 @@ import com.shop.entity.Ticket;
 import com.shop.service.OrdersService;
 import com.shop.service.PerformancesService;
 import com.shop.service.TicketService;
+import com.shop.service.impl.OrdersServiceImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -28,6 +31,8 @@ public class ScheduleTask {
     private PerformancesService performancesService;
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
+
+    private static final Logger log = LoggerFactory.getLogger(ScheduleTask.class);
 
 
 //  @Scheduled(cron = "30 * * * * ?")
@@ -58,29 +63,31 @@ public class ScheduleTask {
 //    }
 
 
-//    @Scheduled(cron = "* * 8 * * ?")
-//    public void checkPerformanceStatus() {
-//        QueryWrapper<Performances> queryWrapper = new QueryWrapper<>();
-//        queryWrapper.eq("status", 1)
-//                    .select("buy_time","id","start_time");
-//        List<Performances> list = performancesService.list(queryWrapper);
-//        for (Performances  performances: list) {
-//            if(LocalDateTime.now().isAfter(performances.getBuyTime()) && LocalDateTime.now().isBefore(performances.getStartTime())){
-//                UpdateWrapper<Performances> updateWrapper = new UpdateWrapper<>();
-//                updateWrapper.eq("id", performances.getId())
-//                        .set("status", 2);
-//                performancesService.update(updateWrapper);
-//            }else if(LocalDateTime.now().isAfter(performances.getStartTime())){
-//                UpdateWrapper<Performances> updateWrapper = new UpdateWrapper<>();
-//                updateWrapper.eq("id", performances.getId())
-//                        .set("status", 3);
-//                performancesService.update(updateWrapper);
-//            }
+   @Scheduled(cron = " * * * * 1 ?")
+   public void checkPerformanceStatus() {
+       log.info("【定时任务】开始检查演出状态，当前时间: {}", LocalDateTime.now());
+       QueryWrapper<Performances> queryWrapper = new QueryWrapper<>();
+       queryWrapper
+                   .select("buy_time","id","start_time");
+       List<Performances> list = performancesService.list(queryWrapper);
+       for (Performances  performances: list) {
+           if(LocalDateTime.now().isAfter(performances.getBuyTime()) && LocalDateTime.now().isBefore(performances.getStartTime())){
+               UpdateWrapper<Performances> updateWrapper = new UpdateWrapper<>();
+               updateWrapper.eq("id", performances.getId())
+                       .set("status", 2);
+               performancesService.update(updateWrapper);
+           }
+           else if(LocalDateTime.now().isAfter(performances.getStartTime())){
+               UpdateWrapper<Performances> updateWrapper = new UpdateWrapper<>();
+               updateWrapper.eq("id", performances.getId())
+                       .set("status", 3);
+               performancesService.update(updateWrapper);
+           }
 //
 //
 //
-//        }
-//    }
+       }
+   }
 
 
 }

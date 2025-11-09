@@ -3,6 +3,7 @@ package com.shop.listen;
 import com.shop.entity.Orders;
 import com.shop.enums.OrderStatus;
 import com.shop.service.OrdersService;
+import com.shop.utils.Idempotent;
 import com.shop.utils.MqConstants;
 import com.shop.utils.MultiDelayMessage;
 import org.slf4j.Logger;
@@ -15,16 +16,21 @@ import org.springframework.amqp.rabbit.annotation.Queue;
 import org.springframework.amqp.rabbit.annotation.QueueBinding;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
+
+import java.util.concurrent.TimeUnit;
 
 @Component
 public class ConsumerListen {
     private final OrdersService ordersService;
     private final RabbitTemplate rabbitTemplate;
+    private final StringRedisTemplate stringRedisTemplate;
 
-    public ConsumerListen(OrdersService ordersService, RabbitTemplate rabbitTemplate) {
+    public ConsumerListen(OrdersService ordersService, RabbitTemplate rabbitTemplate, StringRedisTemplate stringRedisTemplate) {
         this.ordersService = ordersService;
         this.rabbitTemplate = rabbitTemplate;
+        this.stringRedisTemplate = stringRedisTemplate;
     }
 
     private static final Logger log = LoggerFactory.getLogger(ConsumerListen.class);
@@ -35,8 +41,10 @@ public class ConsumerListen {
             key = MqConstants.ORDER_ROUTING_KEY
 
     ))
+
     public void listenReduceStock(Orders order) {
-        log.info("订单消息：{}", order);
+
+
         ordersService.reduceStock(order);
     }
 
@@ -54,7 +62,7 @@ public class ConsumerListen {
             return;
         }
         if (orders.getStatus() != OrderStatus.PENDING) {
-            log.error("订单状态异常");
+            log.error("订单状态不为待支付");
             return;
         }
         //判断是否还有延迟时间

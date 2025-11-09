@@ -9,7 +9,8 @@ public enum ResultCodeEnum {
     EXPIRED(405, "验证码已过期"),
     NOT_MATCH(406, "验证码错误"),
     PWD_ERROR(407, "密码错误"),
-    ROLE_ERROR(408, "权限不足");
+    ROLE_ERROR(408, "权限不足"),
+    REPEAT_OPERATION(409, "请勿重复操作");
 
 
     private final Integer code;

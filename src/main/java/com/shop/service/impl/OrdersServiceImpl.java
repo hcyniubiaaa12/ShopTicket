@@ -13,6 +13,7 @@ import com.shop.service.*;
 import com.shop.mapper.OrdersMapper;
 import com.shop.userhold.UserHold;
 import com.shop.utils.GenerateId;
+import com.shop.utils.Idempotent;
 import com.shop.utils.MqConstants;
 import com.shop.utils.MultiDelayMessage;
 import com.shop.vo.OrdersVo;
@@ -51,7 +52,6 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders>
         implements OrdersService {
 
 
-
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
     @Autowired
@@ -64,10 +64,13 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders>
     private UserTicketService userTicketService;
     @Autowired
     private RabbitTemplate rabbitTemplate;
+    private OrdersService proxy;
+
     private static final Logger log = LoggerFactory.getLogger(OrdersServiceImpl.class);
     private static final DefaultRedisScript<Long> redisScript = new DefaultRedisScript<>();
 
     @Override
+    @Idempotent("save")
     public Result saveOrder(OrdersVo requestOrders) {
         switch (requestOrders.getSaleStatus()) {
             case NOT_OPENED:
@@ -122,6 +125,7 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders>
 
     @Override
     @Transactional
+    @Idempotent("pay")
     public Result pay(Long id) {
         Orders order = super.getById(id);
         if (order == null) {
@@ -168,6 +172,7 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders>
 
     @Override
     @Transactional
+    @Idempotent("cancel")
     public Result cancel(Long id) {
 
         Orders order = super.getById(id);
@@ -208,6 +213,7 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders>
 
 
     @Transactional
+    @Idempotent(value="reduceStock")
     public void reduceStock(Orders orders) {
         log.info(String.valueOf(orders));
         RLock lock = redissonClient.getLock("order:userId:" + orders.getUserId());
@@ -240,15 +246,20 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders>
                 }
             });
 
-        } catch (InterruptedException e) {
+
+        } catch (Exception e) {
+            log.error("库存扣减失败");
+            proxy = (OrdersService) AopContext.currentProxy();
+            proxy.cancel(orders.getId());
+            stringRedisTemplate.delete("order:process:" + orders.getId());
             throw new RuntimeException(e);
+
         } finally {
             lock.unlock();
         }
 
 
     }
-
 
 
 }

@@ -3,6 +3,7 @@ package com.shop.controller;
 import com.shop.entity.User;
 import com.shop.result.Result;
 import com.shop.service.UserService;
+import com.shop.userhold.UserHold;
 import com.shop.vo.CaptchaVo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -20,5 +21,10 @@ public class LoginController {
     public Result login (@RequestBody CaptchaVo captchaVo){
 
         return  userService.login(captchaVo);
+    }
+    @PostMapping("/logout")
+    public Result logout (@RequestHeader("Authorization") String token){
+        Integer userId = UserHold.getUser();
+        return  userService.logout(userId, token);
     }
 }

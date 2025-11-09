@@ -22,4 +22,6 @@ public interface UserService extends IService<User> {
     boolean getIsLike(Integer userId, Integer eventId, Integer cityId);
 
     List<PerformanceDto> getUserLike(Integer userId);
+
+    Result logout(Integer userId,String  token);
 }

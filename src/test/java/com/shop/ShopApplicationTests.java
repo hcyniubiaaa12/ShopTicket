@@ -6,6 +6,7 @@ import com.shop.service.OrdersService;
 import com.shop.service.PerformancesService;
 import com.shop.service.TicketService;
 import com.shop.service.impl.UserServiceImpl;
+import com.shop.utils.Idempotent;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -65,9 +66,9 @@ class ShopApplicationTests {
 
     @Test
     void test2() {
-       stringRedisTemplate.opsForValue().set("stock:ticket:"+54, "10000");
-       stringRedisTemplate.opsForValue().set("stock:ticket:"+55, "10000");
-       stringRedisTemplate.opsForValue().set("stock:ticket:"+56, "10000");
+       stringRedisTemplate.opsForValue().set("stock:ticket:"+57, "10000");
+       stringRedisTemplate.opsForValue().set("stock:ticket:"+58, "10000");
+       stringRedisTemplate.opsForValue().set("stock:ticket:"+59, "10000");
 
     }
 
@@ -79,7 +80,10 @@ class ShopApplicationTests {
 
     @Test
 
-    void test4() throws InterruptedException {
+    void test4()  {
+        ordersService.pay(1L);
+        ordersService.pay(2L);
+
 
 
     }

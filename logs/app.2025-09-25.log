@@ -1,0 +1,6 @@
+2025-09-25 15:53:58.168 [http-nio-8080-exec-7] INFO  com.shop.aspect.MyAspect - 开始执行方法:saveOrder
+2025-09-25 15:53:58.172 [http-nio-8080-exec-7] INFO  com.shop.aspect.MyAspect - 用户: 20001下单，订单参数: [OrdersVo(super=Orders(id=null, num=1, performanceId=8, price=1380, userId=20001, ticketId=56, status=null, createTime=null, isDeleted=null), saleStatus=PRE_SALE)]
+2025-09-25 15:53:58.249 [http-nio-8080-exec-7] INFO  com.shop.aspect.MyAspect - 用户: 20001方法【saveOrder】执行完毕，耗时: 77 ms
+2025-09-25 15:54:07.804 [http-nio-8080-exec-10] INFO  com.shop.aspect.MyAspect - 开始执行方法:pay
+2025-09-25 15:54:07.804 [http-nio-8080-exec-10] INFO  com.shop.aspect.MyAspect - 用户:20001支付，订单ID: [29507546679083009]
+2025-09-25 15:54:07.833 [http-nio-8080-exec-10] INFO  com.shop.aspect.MyAspect - 用户: 20001方法【pay】执行完毕，耗时: 24 ms
