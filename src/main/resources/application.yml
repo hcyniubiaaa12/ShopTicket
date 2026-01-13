@@ -51,19 +51,9 @@ mybatis-plus:
       logic-delete-value: 1
       logic-not-delete-value: 0
   configuration:
-    #log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
     default-executor-type: batch
-langchain4j:
-  community:
-    dashscope:
-      chat-model:
-        model-name: qwen-max
-        api-key: sk-4d9a8f600ad24543bb3630543f98f64e
 
-
-      embedding-model:
-        model-name: text-embedding-v4
-        api-key: sk-4d9a8f600ad24543bb3630543f98f64e
 logging:
   config: classpath:logback-spring.xml  # 显式指定
 

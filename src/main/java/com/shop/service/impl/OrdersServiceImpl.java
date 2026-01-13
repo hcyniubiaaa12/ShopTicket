@@ -70,8 +70,9 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders>
     private static final DefaultRedisScript<Long> redisScript = new DefaultRedisScript<>();
 
     @Override
-    @Idempotent("save")
+    @Idempotent(key = "#requestOrders.userId + '_' + #requestOrders.performanceId")
     public Result saveOrder(OrdersVo requestOrders) {
+
         switch (requestOrders.getSaleStatus()) {
             case NOT_OPENED:
                 return Result.fail("该演出未开始售卖");
@@ -125,7 +126,7 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders>
 
     @Override
     @Transactional
-    @Idempotent("pay")
+    @Idempotent(key = "'pay_' + #id")
     public Result pay(Long id) {
         Orders order = super.getById(id);
         if (order == null) {
@@ -172,7 +173,7 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders>
 
     @Override
     @Transactional
-    @Idempotent("cancel")
+    @Idempotent(key = "'cancel_'+#id")
     public Result cancel(Long id) {
 
         Orders order = super.getById(id);
@@ -213,7 +214,7 @@ public class OrdersServiceImpl extends ServiceImpl<OrdersMapper, Orders>
 
 
     @Transactional
-    @Idempotent(value="reduceStock")
+    @Idempotent(key = "'reduce_'+#orders.id")
     public void reduceStock(Orders orders) {
         log.info(String.valueOf(orders));
         RLock lock = redissonClient.getLock("order:userId:" + orders.getUserId());

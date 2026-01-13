@@ -25,12 +25,10 @@ import java.util.concurrent.TimeUnit;
 public class ConsumerListen {
     private final OrdersService ordersService;
     private final RabbitTemplate rabbitTemplate;
-    private final StringRedisTemplate stringRedisTemplate;
 
     public ConsumerListen(OrdersService ordersService, RabbitTemplate rabbitTemplate, StringRedisTemplate stringRedisTemplate) {
         this.ordersService = ordersService;
         this.rabbitTemplate = rabbitTemplate;
-        this.stringRedisTemplate = stringRedisTemplate;
     }
 
     private static final Logger log = LoggerFactory.getLogger(ConsumerListen.class);
@@ -43,7 +41,6 @@ public class ConsumerListen {
     ))
 
     public void listenReduceStock(Orders order) {
-
 
         ordersService.reduceStock(order);
     }
@@ -84,4 +81,11 @@ public class ConsumerListen {
 
 
     }
+
+
+    @RabbitListener(queues = "dlxQueue")
+    public void dlx(String message) {
+        log.info("死信队列监听到消息：{}", message);
+    }
+
 }

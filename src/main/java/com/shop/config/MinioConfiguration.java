@@ -1,6 +1,7 @@
-package com.shop.minio;
+package com.shop.config;
 
 
+import com.shop.minio.MinioData;
 import io.minio.MinioClient;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;

@@ -21,6 +21,7 @@ public class OrderController {
 
     @Autowired
     private OrdersService ordersService;
+    private int count = 0;
 
     @PostMapping("/saveOrder")
 

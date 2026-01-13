@@ -8,6 +8,6 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Idempotent {
-    String value() ;
-    long expire() default 3;
+    String key () ;
+    long expire() default 30;
 }
